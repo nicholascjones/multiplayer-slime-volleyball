@@ -8,6 +8,22 @@ import math
 import os
 import pygame
 from pygame.locals import *
+	
+class Slime(pygame.sprite.Sprite):
+	def __init__(self, gs=None):
+		pygame.sprite.Sprite.__init__(self)
+
+		# Member Variable Initialization
+		self.gs = gs
+		self.image = pygame.image.load("redslime.png") #sprite image
+		self.rect = self.image.get_rect()
+		self.velocity = 5 """TEST VALUE"""
+
+	
+
+
+
+
 
 class GameSpace:
 	def main(self):
@@ -15,14 +31,22 @@ class GameSpace:
 		pygame.init()
 		pygame.key.set_repeat(500, 30)
 
+		# General Game Variables
 		self.size = self.width, self.height = 640, 480
 		self.black = 0, 0, 0
 		self.count = 0
+
+		
 
 		self.screen = pygame.display.set_mode(self.size)
 
 		# set up game objects
 		self.clock = pygame.time.Clock()
+
+
+		#Physics Objects
+		"""NEED TO UPDATE GRAVITY"""
+		self.g = None  
 
 		# game loop
 		while 1:
