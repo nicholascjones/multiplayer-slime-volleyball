@@ -130,6 +130,8 @@ class GameSpace:
 
 			self.screen.blit(self.ball.image, self.ball.rect)
 
+		#	pygame.draw.rect
+
 			pygame.display.flip()
 
 if __name__ == '__main__':
