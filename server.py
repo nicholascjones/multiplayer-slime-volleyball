@@ -1,39 +1,30 @@
 from twisted.internet.protocol import Factory
-from twisted.internet.protocol import ClientFactory
-from twisted.internet.protocol import Protocol
-from twisted.internet.task import LoopingCall
+from twisted.protocols.basic import LineReceiver
 from twisted.internet import reactor
 
 SERVER_HOST = "localhost"
 SERVER_PORT = 40025
 
-class ServerConnection(Protocol):
+class Server(LineReceiver):
 
-	def __init__(self, addr):
-		self.addr = addr
-
-	def dataReceived(self, data):
-		print data
-		self.transport.write("yo")
+	def __init__(self, users, players):
+		self.users = users
+		self.name = None
+		self.players = players
 
 	def connectionMade(self):
-		print "connection made to %s" % self.addr
+		new = 'player_' + str(len(self.players) + 1)
+		self.players.append(new)
+		self.sendLine(str(self.players))
 
-	def connectionLost(self, reason):
-		print "connection lost to %s" % self.addr
-
-		reactor.stop()
-
-class ServerConnFactory(Factory):
+class ServerFactory(Factory):
 
 	def __init__(self):
-		pass
+		self.users = {}
+		self.players = []
 
 	def buildProtocol(self, addr):
-		return ServerConnection(addr)
+		return Server(self.users, self.players)
 
-#lc = LoopingCall(gameloopiterate)
-#lc.start(1.0/60)
-reactor.listenTCP(SERVER_PORT, ServerConnFactory())
+reactor.listenTCP(SERVER_PORT, ServerFactory())
 reactor.run()
-#lc.stop()
