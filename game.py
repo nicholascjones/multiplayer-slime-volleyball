@@ -17,15 +17,26 @@ class Slime(pygame.sprite.Sprite):
 		self.gs = gs
 		self.image = pygame.image.load("redslime.png") #sprite image
 		self.rect = self.image.get_rect()
-		self.mv = 5 """TEST VALUE""" #velocity used
+		self.mv = 5 # TEST VALUE #velocity used""" 
 		self.vx = 0 #initial x velocity
 		self.vy = 0 #initial y velocity
+
+	def tick(self):
+
+		print "tick"
 
 	def move(self,code):
 
 		print "MOVING!!"
 
 		print code
+
+		if code == K_RIGHT:
+			self.rect = self.rect.move(self.mv,0)
+		elif code == K_LEFT:
+			self.rect = self.rect.move(-self.mv,0)
+		else:
+			print "invalid"
 
 		
 
@@ -50,7 +61,7 @@ class GameSpace:
 
 		# set up game objects
 
-		self.p1 = Player(self) #player 1
+		self.p1 = Slime(self) #player 1
 
 		self.clock = pygame.time.Clock()
 
@@ -59,12 +70,12 @@ class GameSpace:
 		"""NEED TO UPDATE GRAVITY"""
 		self.g = None  
 
-		# game loop
+		# 3) game loop
 		while True:
-			# clock tick regulation
+			# 4) clock tick regulation
 			self.clock.tick(60)
 
-			# user input handling
+			# 5) user input handling
 			for event in pygame.event.get():
 				if event.type == QUIT:
 					sys.exit()
@@ -80,10 +91,12 @@ class GameSpace:
 					self.black = 0, 0, 0
 					self.count -= 1
 
-			# tick game objects
+			# 6) tick game objects
 
-			# display the game objects
+			# 7) display the game objects
 			self.screen.fill(self.black)
+
+			self.screen.blit(self.p1.image, self.p1.rect)
 
 			pygame.display.flip()
 
