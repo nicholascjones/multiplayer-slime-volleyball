@@ -10,14 +10,22 @@ import pygame
 from pygame.locals import *
 	
 class Slime(pygame.sprite.Sprite):
-	def __init__(self, gs=None, x=0, y=375):
+	def __init__(self, gs=None,pn=1):
 		pygame.sprite.Sprite.__init__(self)
 
 		# Member Variable Initialization
 		self.gs = gs
+		self.pn = pn #player number
 		self.image = pygame.image.load("redslime.png") #sprite image
 		self.rect = self.image.get_rect()
-		self.rect.topleft = (x,y)
+		if self.pn == 1:
+			self.rect.topleft = (0,375) #player 1 values
+		elif self.pn == 2:
+			self.rect.topleft = (475,375) #player 2 values
+		else: #if more than two players
+			print "error: only two players allowed to play!"
+			sys.exit(1)
+
 		self.mv = 5 # TEST VALUE #velocity used""" 
 		self.vx = 0 #initial x velocity
 		self.vy = 0 #initial y velocity
@@ -58,13 +66,18 @@ class GameSpace:
 		self.black = 0, 0, 0
 		self.count = 0
 
+		self.numPlayers = 1 #default number of players
+
 		
 
 		self.screen = pygame.display.set_mode(self.size)
 
 		# set up game objects
 
-		self.p1 = Slime(self) #player 1
+		self.p1 = Slime(self,self.numPlayers) #player 1
+		self.numPlayers += 1
+		self.p2 = Slime(self,self.numPlayers)
+		self.numPlayers += 1
 
 		self.clock = pygame.time.Clock()
 
