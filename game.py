@@ -17,9 +17,17 @@ class Slime(pygame.sprite.Sprite):
 		self.gs = gs
 		self.image = pygame.image.load("redslime.png") #sprite image
 		self.rect = self.image.get_rect()
-		self.velocity = 5 """TEST VALUE"""
+		self.mv = 5 """TEST VALUE""" #velocity used
+		self.vx = 0 #initial x velocity
+		self.vy = 0 #initial y velocity
 
-	
+	def move(self,code):
+
+		print "MOVING!!"
+
+		print code
+
+		
 
 
 
@@ -41,6 +49,9 @@ class GameSpace:
 		self.screen = pygame.display.set_mode(self.size)
 
 		# set up game objects
+
+		self.p1 = Player(self) #player 1
+
 		self.clock = pygame.time.Clock()
 
 
@@ -49,7 +60,7 @@ class GameSpace:
 		self.g = None  
 
 		# game loop
-		while 1:
+		while True:
 			# clock tick regulation
 			self.clock.tick(60)
 
@@ -60,6 +71,8 @@ class GameSpace:
 				elif event.type == KEYDOWN:
 					if event.key == pygame.K_q:
 						sys.exit()
+					elif (event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT):
+						self.p1.move(event.key)
 				elif event.type == MOUSEBUTTONUP and self.count == 0:
 					self.black = 100, 100, 100
 					self.count += 1
