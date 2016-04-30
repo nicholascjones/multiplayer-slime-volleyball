@@ -16,15 +16,22 @@ class Slime(pygame.sprite.Sprite):
 		# Member Variable Initialization
 		self.gs = gs
 		self.pn = pn #player number
-		self.image = pygame.image.load("redslime.png") #sprite image
-		self.rect = self.image.get_rect()
+		
+		
 		if self.pn == 1:
+			self.image = pygame.image.load("redslime.png") #sprite image
+			self.image = pygame.transform.scale(self.image,(self.gs.SpriteScale,self.gs.SpriteScale))
+			self.rect = self.image.get_rect()
 			self.rect.topleft = (0,375) #player 1 values
 		elif self.pn == 2:
+			self.image = pygame.image.load("greenslime.png") #sprite image
+			self.image = pygame.transform.scale(self.image,(self.gs.SpriteScale,self.gs.SpriteScale))
+			self.rect = self.image.get_rect()
 			self.rect.topleft = (445,375) #player 2 values
 		else: #if more than two players
 			print "error: only two players allowed to play!"
 			sys.exit(1)
+
 
 		self.mv = 5 # TEST VALUE #velocity used""" 
 		self.vx = 0 #initial x velocity
@@ -44,10 +51,8 @@ class Slime(pygame.sprite.Sprite):
 			self.rect = self.rect.move(self.mv,0)
 		elif code == K_LEFT:
 			self.rect = self.rect.move(-self.mv,0)
-		elif code == K_DOWN:
-			self.rect = self.rect.move(0,self.mv)
 		else:
-			print "invalid"
+			print "invalid movement"
 
 
 class Ball(pygame.sprite.Sprite):
@@ -78,7 +83,10 @@ class GameSpace:
 
 		self.numPlayers = 1 #default number of players
 
-		
+		#Physics Objects
+		self.SpriteScale = 150 #scale for sprites to multiply by
+		"""NEED TO UPDATE GRAVITY"""
+		self.g = None  
 
 		self.screen = pygame.display.set_mode(self.size)
 
@@ -94,9 +102,7 @@ class GameSpace:
 		self.clock = pygame.time.Clock()
 
 
-		#Physics Objects
-		"""NEED TO UPDATE GRAVITY"""
-		self.g = None  
+
 
 		# 3) game loop
 		while True:
@@ -108,9 +114,7 @@ class GameSpace:
 				if event.type == QUIT:
 					sys.exit()
 				elif event.type == KEYDOWN:
-					if event.key == pygame.K_q:
-						sys.exit()
-					elif (event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT or event.key == pygame.K_DOWN):
+					if (event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT):
 						self.p1.move(event.key)
 				elif event.type == MOUSEBUTTONUP and self.count == 0:
 					self.black = 100, 100, 100
