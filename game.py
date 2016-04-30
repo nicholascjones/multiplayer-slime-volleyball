@@ -10,13 +10,14 @@ import pygame
 from pygame.locals import *
 	
 class Slime(pygame.sprite.Sprite):
-	def __init__(self, gs=None):
+	def __init__(self, gs=None, x=0, y=375):
 		pygame.sprite.Sprite.__init__(self)
 
 		# Member Variable Initialization
 		self.gs = gs
 		self.image = pygame.image.load("redslime.png") #sprite image
 		self.rect = self.image.get_rect()
+		self.rect.topleft = (x,y)
 		self.mv = 5 # TEST VALUE #velocity used""" 
 		self.vx = 0 #initial x velocity
 		self.vy = 0 #initial y velocity
@@ -29,12 +30,14 @@ class Slime(pygame.sprite.Sprite):
 
 		print "MOVING!!"
 
-		print code
+		print self.rect.topleft
 
 		if code == K_RIGHT:
 			self.rect = self.rect.move(self.mv,0)
 		elif code == K_LEFT:
 			self.rect = self.rect.move(-self.mv,0)
+		elif code == K_DOWN:
+			self.rect = self.rect.move(0,self.mv)
 		else:
 			print "invalid"
 
@@ -82,7 +85,7 @@ class GameSpace:
 				elif event.type == KEYDOWN:
 					if event.key == pygame.K_q:
 						sys.exit()
-					elif (event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT):
+					elif (event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT or event.key == pygame.K_DOWN):
 						self.p1.move(event.key)
 				elif event.type == MOUSEBUTTONUP and self.count == 0:
 					self.black = 100, 100, 100
