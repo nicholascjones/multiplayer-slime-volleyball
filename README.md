@@ -10,3 +10,10 @@ lc = LoopingCall(gameloopiterate)
 lc.start(1.0/60)
 reactor.run()
 lc.stop()
+
+
+
+Sources:
+
+- piskelapp.com -- used to create sprites
+- CITE ORIGINAL SLIME VOLLEYBALL AS INSPIRATION
