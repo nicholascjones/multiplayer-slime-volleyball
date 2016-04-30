@@ -16,16 +16,19 @@ class Slime(pygame.sprite.Sprite):
 		# Member Variable Initialization
 		self.gs = gs
 		self.pn = pn #player number
+
+		self.SpriteScale = 150 #scale for sprites to multiply by
 		
 		
+		## initialization differs by player
 		if self.pn == 1:
 			self.image = pygame.image.load("redslime.png") #sprite image
-			self.image = pygame.transform.scale(self.image,(self.gs.SpriteScale,self.gs.SpriteScale))
+			self.image = pygame.transform.scale(self.image,(self.SpriteScale,self.SpriteScale))
 			self.rect = self.image.get_rect()
 			self.rect.topleft = (0,375) #player 1 values
 		elif self.pn == 2:
 			self.image = pygame.image.load("greenslime.png") #sprite image
-			self.image = pygame.transform.scale(self.image,(self.gs.SpriteScale,self.gs.SpriteScale))
+			self.image = pygame.transform.scale(self.image,(self.SpriteScale,self.SpriteScale))
 			self.rect = self.image.get_rect()
 			self.rect.topleft = (445,375) #player 2 values
 		else: #if more than two players
@@ -33,7 +36,7 @@ class Slime(pygame.sprite.Sprite):
 			sys.exit(1)
 
 
-		self.mv = 5 # TEST VALUE #velocity used""" 
+		self.mv = 5 # """ TEST VALUE #velocity used""" 
 		self.vx = 0 #initial x velocity
 		self.vy = 0 #initial y velocity
 
@@ -59,7 +62,9 @@ class Ball(pygame.sprite.Sprite):
 		def __init__(self,x=0):
 			pygame.sprite.Sprite.__init__(self)
 			self.gs = gs
+			self.BallScale = 20
 			self.image = pygame.image.load("ball.png")
+			self.image = pygame.transform.scale(self.image,(self.BallScale,self.BallScale))
 			self.rect = self.image.get_rect()
 			self.x = x
 			#self.y = self.gs.height/2
@@ -84,7 +89,7 @@ class GameSpace:
 		self.numPlayers = 1 #default number of players
 
 		#Physics Objects
-		self.SpriteScale = 150 #scale for sprites to multiply by
+		
 		"""NEED TO UPDATE GRAVITY"""
 		self.g = None  
 
