@@ -21,7 +21,7 @@ class Slime(pygame.sprite.Sprite):
 		if self.pn == 1:
 			self.rect.topleft = (0,375) #player 1 values
 		elif self.pn == 2:
-			self.rect.topleft = (475,375) #player 2 values
+			self.rect.topleft = (445,375) #player 2 values
 		else: #if more than two players
 			print "error: only two players allowed to play!"
 			sys.exit(1)
@@ -49,7 +49,17 @@ class Slime(pygame.sprite.Sprite):
 		else:
 			print "invalid"
 
-		
+
+class Ball(pygame.sprite.Sprite):
+		def __init__(self,x=0):
+			pygame.sprite.Sprite.__init__(self)
+			self.gs = gs
+			self.image = pygame.image.load("ball.png")
+			self.rect = self.image.get_rect()
+			self.x = x
+			#self.y = self.gs.height/2
+			self.y = 0
+		#	self.rect.center = (self.x,self.y)
 
 
 
@@ -78,6 +88,8 @@ class GameSpace:
 		self.numPlayers += 1
 		self.p2 = Slime(self,self.numPlayers)
 		self.numPlayers += 1
+
+		self.ball = Ball(self)
 
 		self.clock = pygame.time.Clock()
 
@@ -113,6 +125,10 @@ class GameSpace:
 			self.screen.fill(self.black)
 
 			self.screen.blit(self.p1.image, self.p1.rect)
+
+			self.screen.blit(self.p2.image, self.p2.rect)
+
+			self.screen.blit(self.ball.image, self.ball.rect)
 
 			pygame.display.flip()
 
