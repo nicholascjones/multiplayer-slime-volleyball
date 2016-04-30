@@ -14,6 +14,7 @@ class ServerConnection(Protocol):
 
 	def dataReceived(self, data):
 		print data
+		self.transport.write("yo")
 
 	def connectionMade(self):
 		print "connection made to %s" % self.addr

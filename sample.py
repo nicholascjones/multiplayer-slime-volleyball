@@ -13,9 +13,11 @@ class ClientConnection(Protocol):
 
 	def dataReceived(self, data):
 		print data
+		self.transport.loseConnection()
 
 	def connectionMade(self):
 		print "connection made to %s port %s" % (SERVER_HOST, SERVER_PORT)
+		self.transport.write("hi")
 
 	def connectionLost(self, reason):
 		print "connection lost to %s port %s" % (SERVER_HOST, SERVER_PORT)
