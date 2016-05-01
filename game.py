@@ -19,18 +19,20 @@ class Slime(pygame.sprite.Sprite):
 
 			self.SpriteScale = 150 #scale for sprites to multiply by
 			
+			self.ground = self.gs.height
 			
 			## initialization differs by player
 			if self.pn == 1:
 				self.image = pygame.image.load("redslime.png") #sprite image
 				self.image = pygame.transform.scale(self.image,(self.SpriteScale,self.SpriteScale))
 				self.rect = self.image.get_rect()
-				self.rect.topleft = (0,375) #player 1 values
+				
+				self.rect.bottomleft = (0,self.ground) #player 1 values
 			elif self.pn == 2:
 				self.image = pygame.image.load("greenslime.png") #sprite image
 				self.image = pygame.transform.scale(self.image,(self.SpriteScale,self.SpriteScale))
 				self.rect = self.image.get_rect()
-				self.rect.topleft = (445,375) #player 2 values
+				self.rect.bottomleft = (445,self.ground) #player 2 values
 			else: #if more than two players
 				print "error: only two players allowed to play!"
 				sys.exit(1)
@@ -42,7 +44,7 @@ class Slime(pygame.sprite.Sprite):
 
 		def tick(self):
 
-			if self.rect.top < 375:
+			if self.rect.bottom <= self.ground:
 				self.vy += self.gs.g
 				self.rect = self.rect.move(0,self.vy)
 				print "not ground tick"
@@ -89,9 +91,24 @@ class Ball(pygame.sprite.Sprite):
 			self.vy = 0
 			self.rect.topleft = (self.x,self.y)
 
+		def bounce(self):
+			self.vy *= -1
+			self.rect = self.rect.move(0,self.vy)
+
 		def tick(self):
-		#	self.vy -= 
-			pass
+			if (pygame.sprite.collide_rect(self,self.gs.p1) or pygame.sprite.collide_rect(self,self.gs.p2)):
+				print "bouncing!"
+				self.bounce()
+
+
+			elif self.rect.top <= (self.gs.height-50):
+				self.vy += self.gs.g
+				self.rect = self.rect.move(0,self.vy)
+
+			else:
+				print "POINT"
+
+
 
 class Net(pygame.sprite.Sprite):
 		def __init__(self,gs=None):
@@ -168,6 +185,8 @@ class GameSpace:
 			# 6) tick game objects
 
 			self.p1.tick()
+
+			self.ball.tick()
 
 			# 7) display the game objects
 			self.screen.fill(self.black)
