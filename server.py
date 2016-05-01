@@ -54,13 +54,13 @@ class Slime(pygame.sprite.Sprite):
 
 		def move(self,code):
 
-			print "MOVING!!"
+			#print "MOVING!!"
 
-			print self.rect.topleft
+			#print self.rect.topleft
 
-			if code == K_RIGHT:
+			if code == K_d:
 				self.rect = self.rect.move(self.mv,0)
-			elif code == K_LEFT:
+			elif code == K_a:
 				self.rect = self.rect.move(-self.mv,0)
 			else:
 				print "invalid movement"
@@ -119,13 +119,26 @@ class Server(Protocol):
 	def connectionLost(self, reason):
 		if self == tracker.player1:
 			print "Player 1 disconnected!"
-			tracker.player2.transport.loseConnection()
-		if self == tracker.player2:
+			if self.gs.p2 != None:
+				tracker.player2.transport.loseConnection()
+		elif self == tracker.player2:
 			print "Player 2 disconnected!"
 			tracker.player1.transport.loseConnection()
+		else:
+			return
 		self.gs.p1 = None
 		self.gs.p2 = None
 		self.players.pop()
+
+	def dataReceived(self, data):
+		if data == str(100):
+			key = pygame.K_d
+		elif data == str(97):
+			key = pygame.K_a
+		if self == tracker.player1:
+			self.gs.p1.move(key)
+		elif self == tracker.player2:
+			self.gs.p2.move(key)
 
 class ServerFactory(Factory):
 

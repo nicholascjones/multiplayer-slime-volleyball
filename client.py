@@ -156,7 +156,7 @@ class Client(object):
 				if event.key == pygame.K_q:
 					reactor.stop()
 				elif (event.key == pygame.K_a or event.key == pygame.K_d):
-					self.p.move(event.key)
+					self.protocol.transport.write(str(event.key))
 
 		self.screen.fill(self.black)
 		if self.p != None:
