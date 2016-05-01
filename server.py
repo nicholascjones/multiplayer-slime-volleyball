@@ -158,14 +158,13 @@ class GameSpace:
 
 	def __init__(self):
 		# initialization
-		pygame.init()
-		pygame.key.set_repeat(500, 30)
+		#pygame.init()
+		#pygame.key.set_repeat(500, 30)
 
 		# General Game Variables
 		self.size = self.width, self.height = 640, 480
-		self.screen = pygame.display.set_mode(self.size)
-		self.black = 0, 0, 0
-		self.count = 0
+		#self.screen = pygame.display.set_mode(self.size)
+		#self.black = 0, 0, 0
 
 		#Physics Objects
 		"""NEED TO UPDATE GRAVITY"""
@@ -184,21 +183,20 @@ class GameSpace:
 			self.p2 = Slime(self, 2)
 
 	def tick(self):
-		for event in pygame.event.get():
-			if event.type == QUIT:
-				reactor.stop()
+		#for event in pygame.event.get():
+		#	if event.type == QUIT:
+		#		reactor.stop()
 
-		self.screen.fill(self.black)
+		#self.screen.fill(self.black)
 		if self.p1 != None:
-			self.screen.blit(self.p1.image, self.p1.rect)
+			#self.screen.blit(self.p1.image, self.p1.rect)
 			if self.p2 != None:
 				tracker.player1.transport.write(str(self.p2.rect.centerx))
 		if self.p2 != None:
-			self.screen.blit(self.p2.image, self.p2.rect)
+			#self.screen.blit(self.p2.image, self.p2.rect)
 			tracker.player2.transport.write(str(self.p1.rect.centerx))
-		self.screen.blit(self.ball.image, self.ball.rect)
-		self.screen.blit(self.net.image, self.net.rect)
-		pygame.display.flip()
+		#self.screen.blit(self.ball.image, self.ball.rect)
+		#self.screen.blit(self.net.image, self.net.rect)
 
 tracker = Tracker()
 gs = GameSpace()

@@ -49,32 +49,35 @@ class Slime(pygame.sprite.Sprite):
 			self.gs = gs
 			self.pn = pn #player number
 
-			self.SpriteScale = 150 #scale for sprites to multiply by
-			
+			self.SpriteScale = 100 #scale for sprites to multiply by
+			self.ground = self.gs.height
 			
 			## initialization differs by player
 			if self.pn == 1:
 				self.image = pygame.image.load("redslime.png") #sprite image
-				self.image = pygame.transform.scale(self.image,(self.SpriteScale,self.SpriteScale))
+				self.image = pygame.transform.scale(self.image,(self.SpriteScale,int(self.SpriteScale*.6)))
 				self.rect = self.image.get_rect()
-				self.rect.topleft = (0,375) #player 1 values
+				self.rect.bottomleft = (0, self.ground) #player 1 values
 			elif self.pn == 2:
 				self.image = pygame.image.load("greenslime.png") #sprite image
-				self.image = pygame.transform.scale(self.image,(self.SpriteScale,self.SpriteScale))
+				self.image = pygame.transform.scale(self.image,(self.SpriteScale,int(self.SpriteScale*.6)))
 				self.rect = self.image.get_rect()
-				self.rect.topleft = (445,375) #player 2 values
+				self.rect.bottomleft = (445, self.ground) #player 2 values
 			else: #if more than two players
 				print "error: only two players allowed to play!"
 				sys.exit(1)
 
 
-			self.mv = 5 # """ TEST VALUE #velocity used""" 
+			self.mv = 7 # """ TEST VALUE #velocity used""" 
 			self.vx = 0 #initial x velocity
 			self.vy = 0 #initial y velocity
 
 		def tick(self):
-
-			print "tick"
+			if self.rect.bottom <= self.ground:
+				self.vy += self.gs.g
+				self.rect = self.rect.move(0, self.vy)
+			self.rect = self.rect.move(self.vx, 0)
+			self.vx = 0
 
 		def move(self,code):
 
@@ -83,24 +86,44 @@ class Slime(pygame.sprite.Sprite):
 			#print self.rect.topleft
 
 			if code == K_d:
-				self.rect = self.rect.move(self.mv,0)
+				#self.rect = self.rect.move(self.mv,0)
+				self.vx += self.mv
 			elif code == K_a:
-				self.rect = self.rect.move(-self.mv,0)
+				#self.rect = self.rect.move(-self.mv,0)
+				self.vx -= self.mv
 			#else:
 				#print "invalid movement"
+
+		def jump(self):
+			if self.rect.bottom >= self.ground:
+				self.vy -= 7
+				self.rect = self.rect.move(0, self.vy)
 
 class Ball(pygame.sprite.Sprite):
 		def __init__(self,gs=None,x=0):
 			pygame.sprite.Sprite.__init__(self)
 			self.gs = gs
-			self.BallScale = 20
+			self.BallScale = 15
 			self.image = pygame.image.load("ball.png")
 			self.image = pygame.transform.scale(self.image,(self.BallScale,self.BallScale))
 			self.rect = self.image.get_rect()
 			self.x = x 
 			#self.y = self.gs.height/2
 			self.y = 0
+			self.vx = 0
+			self.vy = 0
 			self.rect.topleft = (self.x,self.y)
+
+		def bounce(self):
+			self.vy *= -1
+			self.rect = self.rect.move(0, self.vy)
+
+		def tick(self):
+			if (pygame.sprite.collide_rect(self, self.gs.p) or pygame.sprite.collide_rect(self, self.gs.e)):
+				self.bounce()
+			elif self.rect.bottom < self.gs.height-10:
+				self.vy += self.gs.g
+				self.rect = self.rect.move(0, self.vy)
 
 class Net(pygame.sprite.Sprite):
 		def __init__(self,gs=None):
@@ -127,9 +150,10 @@ class Client(object):
 		self.black = 0, 0, 0
 		self.p = None
 		self.e = None
+		self.ball = None
 
 		"""NEED TO UPDATE GRAVITY"""
-		self.g = None
+		self.g = 0.5
 
 	def new_line(self, line):
 		self.line = line
@@ -140,8 +164,8 @@ class Client(object):
 				self.e.rect.centerx = int(self.line)
 	def connectionMade(self):
 		if self.line == str(1) or self.line == str(2):
-			self.ball = Ball(self)
 			self.net = Net(self)
+			self.ball = Ball(self)
 			self.value = int(self.line)
 			self.p = Slime(self, self.value)
 			if self.value == 1:
@@ -164,7 +188,15 @@ class Client(object):
 				elif (event.key == pygame.K_a or event.key == pygame.K_d):
 					self.protocol.transport.write(str(event.key))
 					self.p.move(event.key)
-					
+				elif event.key == pygame.K_SPACE:
+					self.p.jump()	
+
+		if self.p != None:
+			self.p.tick()
+		if self.e != None:
+			self.e.tick()
+		if self.ball != None:
+			self.ball.tick()
 
 		self.screen.fill(self.black)
 		if self.p != None:
