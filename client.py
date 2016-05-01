@@ -161,7 +161,11 @@ class Client(object):
 			self.connectionMade()
 		else:
 			if self.e != None:
-				self.e.rect.centerx = int(self.line)
+				components = self.line.split("|")
+				x = components[0]
+				y = components[1]
+				self.e.rect.centerx = int(x)
+				self.e.rect.centery = int(y)
 	def connectionMade(self):
 		if self.line == str(1) or self.line == str(2):
 			self.net = Net(self)
@@ -189,6 +193,7 @@ class Client(object):
 					self.protocol.transport.write(str(event.key))
 					self.p.move(event.key)
 				elif event.key == pygame.K_SPACE:
+					self.protocol.transport.write(str(event.key))
 					self.p.jump()	
 
 		if self.p != None:
