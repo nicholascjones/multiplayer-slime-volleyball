@@ -4,7 +4,7 @@
 ## Prof. Collin McMillan
 
 from twisted.internet.protocol import ClientFactory
-from twisted.protocols.basic import LineReceiver
+from twisted.internet.protocol import Protocol
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 
@@ -17,17 +17,20 @@ from pygame.locals import *
 SERVER_HOST = "localhost"
 SERVER_PORT = 40025
 
-class ClientProtocol(LineReceiver):
+class ClientProtocol(Protocol):
 
 	def __init__(self, recv):
 		self.recv = recv
 		c.protocol = self
 
-	def lineReceived(self, line):
-		self.recv(line)
+	def dataReceived(self, data):
+		self.recv(data)
 
 	def connectionMade(self):
 		print "Connected to server!"
+
+	def connectionLost(self, reason):
+		c.exit = True
 
 class ClientFactory(ClientFactory):
 
@@ -115,10 +118,10 @@ class Client(object):
 
 	def __init__(self):
 		#1) initialization
+		self.exit = False
 		pygame.init()
 		pygame.key.set_repeat(500, 30)
 		# game variables
-		self.line = 'no message'
 		self.size = self.width, self.height = 640, 480
 		self.screen = pygame.display.set_mode(self.size)
 		self.black = 0, 0, 0
@@ -136,11 +139,16 @@ class Client(object):
 			self.ball = Ball(self)
 			self.net = Net(self)
 			self.p = Slime(self, int(self.line))
+		elif self.line == "Disconnect":
+			print self.line
+			reactor.stop()
 		else:
 			print self.line
 			reactor.stop()
 
 	def tick(self):
+		if c.exit == True:
+			reactor.stop()
 		for event in pygame.event.get():
 			if event.type == QUIT:
 				reactor.stop()

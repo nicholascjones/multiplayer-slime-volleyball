@@ -4,7 +4,7 @@
 ## Prof. Collin McMillan
 
 from twisted.internet.protocol import Factory
-from twisted.protocols.basic import LineReceiver
+from twisted.internet.protocol import Protocol
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 
@@ -90,29 +90,42 @@ class Ball(pygame.sprite.Sprite):
 			self.y = 0
 			self.rect.topleft = (self.x,self.y)
 
-class Server(LineReceiver):
+class Server(Protocol):
 
-	def __init__(self, players):
+	def __init__(self, players, addr):
 		self.players = players
-		self.hasplayers = False
+		self.addr = addr
 		self.gs = gs
+		if len(self.players) == 0:
+			tracker.player1 = self
+		elif len(self.players) == 1:
+			tracker.player2 = self
 
 	def connectionMade(self):
 		if len(self.players) == 0:
 			new = 'player_' + str(len(self.players) + 1)
 			self.players.append(new)
-			self.hasplayers = True
 			self.gs.addplayer(len(self.players))
 			print "Player 1 connected!"
-			self.sendLine(str(1))
+			self.transport.write(str(1))
 		elif len(self.players) == 1:
 			new = 'player_' + str(len(self.players) + 1)
 			self.players.append(new)
 			self.gs.addplayer(len(self.players))
 			print "Player 2 connected!"
-			self.sendLine(str(2))
+			self.transport.write(str(2))
 		else:
-			self.sendLine("Server is full!")
+			self.transport.write("Server is full!")
+	def connectionLost(self, reason):
+		if self == tracker.player1:
+			print "Player 1 disconnected!"
+			tracker.player2.transport.loseConnection()
+		if self == tracker.player2:
+			print "Player 2 disconnected!"
+			tracker.player1.transport.loseConnection()
+		self.gs.p1 = None
+		self.gs.p2 = None
+		self.players.pop()
 
 class ServerFactory(Factory):
 
@@ -120,8 +133,13 @@ class ServerFactory(Factory):
 		self.players = []
 
 	def buildProtocol(self, addr):
-		return Server(self.players)
+		return Server(self.players, addr)
 
+class Tracker:
+	
+	def __init__(self):
+		self.player1 = Server
+		self.player2 = Server
 
 class GameSpace:
 
@@ -166,6 +184,7 @@ class GameSpace:
 		self.screen.blit(self.net.image, self.net.rect)
 		pygame.display.flip()
 
+tracker = Tracker()
 gs = GameSpace()
 
 lc = LoopingCall(gs.tick)
