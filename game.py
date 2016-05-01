@@ -11,12 +11,14 @@ import random
 from pygame.locals import *
 	
 class Slime(pygame.sprite.Sprite):
-		def __init__(self, gs=None,pn=1):
+		def __init__(self, gs=None,pn=1,human=True):
 			pygame.sprite.Sprite.__init__(self)
 
 			# Member Variable Initialization
 			self.gs = gs
 			self.pn = pn #player number
+
+			self.human = human
 
 			self.points = 0 #player number of points
 
@@ -95,18 +97,23 @@ class Slime(pygame.sprite.Sprite):
 
 		def move(self,code):
 
-			print "MOVING!!"
 
-			print self.rect.topleft
+			if self.human == True:
+				print "MOVING!!"
 
-			if code == K_RIGHT:
-			#	self.rect = self.rect.move(self.mv,0)
-				self.vx += self.mv/2
-			elif code == K_LEFT:
-			#	self.rect = self.rect.move(-self.mv,0)
-				self.vx -= self.mv/2
+				print self.rect.topleft
+
+				if code == K_RIGHT:
+				#	self.rect = self.rect.move(self.mv,0)
+					self.vx += self.mv/2
+				elif code == K_LEFT:
+				#	self.rect = self.rect.move(-self.mv,0)
+					self.vx -= self.mv/2
+				else:
+					print "invalid movement"
+
 			else:
-				print "invalid movement"
+				self.vx = self.gs.ball.vx
 
 		def jump(self):
 
@@ -141,6 +148,9 @@ class Ball(pygame.sprite.Sprite):
 
 		def bounce(self,player):
 
+
+			rf = random.randint(-1,1)
+			rs = random.random()
 			#bounce from player 1
 			if player == 1:
 				xDiff = self.gs.p1.bx-self.rect.centerx
@@ -150,6 +160,7 @@ class Ball(pygame.sprite.Sprite):
 				""" not exactly sure what to do here """
 				self.vx = math.cos(ang) * -12.5  #self.gs.p1.vx
 				self.vx += math.cos(ang)*self.gs.p1.vx
+				self.vx += (int(rf*rs))
 
 				self.vy *= -0.9
 				self.vy -= math.cos(ang)*self.gs.p1.vy
@@ -165,6 +176,7 @@ class Ball(pygame.sprite.Sprite):
 				""" not exactly sure what to do here """
 				self.vx = math.cos(ang) * -12.5 #self.gs.p1.vx
 				self.vx += math.cos(ang)*self.gs.p2.vx
+				self.vx += (int(rf*rs))
 
 				self.vy *= -0.9
 				self.vy -= math.cos(ang)*self.gs.p2.vy
@@ -280,7 +292,7 @@ class GameSpace:
 
 		self.p1 = Slime(self,self.numPlayers) #player 1
 		self.numPlayers += 1
-		self.p2 = Slime(self,self.numPlayers)
+		self.p2 = Slime(self,self.numPlayers,True) #computer
 		self.numPlayers += 1
 
 		self.ball = Ball(self)
