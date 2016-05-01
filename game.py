@@ -39,7 +39,7 @@ class Slime(pygame.sprite.Sprite):
 				sys.exit(1)
 
 
-			self.mv = 7 # """ TEST VALUE #velocity used""" 
+			self.mv = 5 # """ TEST VALUE #velocity used""" 
 			self.vx = 0 #initial x velocity
 			self.vy = 0 #initial y velocity
 
@@ -51,8 +51,24 @@ class Slime(pygame.sprite.Sprite):
 				self.rect = self.rect.move(0,self.vy)
 				print "not ground tick"
 			print "ground tick"
+			
+			if pygame.sprite.collide_rect(self,self.gs.net):
+				if self.pn == 1:
+					self.vx = -1
+				elif self.pn == 2:
+					self.vx = 1
+			elif self.rect.left <= 0:
+					self.vx = 1
+			elif self.rect.right >= self.gs.width:
+					self.vx = -1
+			elif self.vx >= 1:
+				self.vx -= 1
+			elif self.vx <= -1:
+				self.vx += 1
+			else:
+				pass
+
 			self.rect = self.rect.move(self.vx,0)
-			self.vx = 0
 
 
 			self.by = self.rect.bottom
@@ -109,7 +125,7 @@ class Ball(pygame.sprite.Sprite):
 			#bounce from player 1
 			if player == 1:
 				xDiff = self.gs.p1.bx-self.rect.centerx
-				yDiff = self.gs.p1.by-self.rect.centery
+				yDiff = self.gs.p1.by-self.rect.centery#+(xDiff/self.rect.centery)
 				ang = math.atan2(yDiff,xDiff)
 
 				""" not exactly sure what to do here """
@@ -123,7 +139,7 @@ class Ball(pygame.sprite.Sprite):
 			elif player == 2:
 
 				xDiff = self.gs.p2.bx-self.rect.centerx
-				yDiff = self.gs.p2.by-self.rect.centery
+				yDiff = self.gs.p2.by-self.rect.centery#+(xDiff/self.rect.centery)
 				ang = math.atan2(yDiff,xDiff)
 
 				""" not exactly sure what to do here """
@@ -139,8 +155,13 @@ class Ball(pygame.sprite.Sprite):
 			#bounce from net
 			elif player == 3: #
 
-				self.vx *= -(1.25)
-				self.rect = self.rect.move(self.vx,self.vy)
+				if (self.rect.centery >= 375 and self.rect.centery <= 385):
+					self.vy *= int(-0.5)
+					print "TOP NET BOUNCE OMG"
+				else:
+
+					self.vx *= -(1.25)
+					self.rect = self.rect.move(self.vx,self.vy)
 
 				print "NET BOUNCE"
 
@@ -199,6 +220,7 @@ class Net(pygame.sprite.Sprite):
 			self.rect = self.image.get_rect()
 			self.rect.topleft = (self.x,self.y)
 
+			print "net topleft = " + str(self.rect.topleft)
 
 
 
@@ -220,8 +242,9 @@ class GameSpace:
 		"""NEED TO UPDATE GRAVITY"""
 		self.g = 0.5
 
+		#flags to enable ceilings and walls
 		self.ceiling = False
-		self.walls = False
+		self.walls = True
 
 		self.screen = pygame.display.set_mode(self.size)
 
@@ -253,7 +276,8 @@ class GameSpace:
 				elif event.type == KEYDOWN:
 					if (event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT):
 						self.p1.move(event.key)
-					elif event.key == pygame.K_UP:
+
+					if event.key == pygame.K_UP:
 						self.p1.jump()
 				elif event.type == MOUSEBUTTONUP and self.count == 0:
 					self.black = 100, 100, 100
