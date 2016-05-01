@@ -245,6 +245,9 @@ class Ball(pygame.sprite.Sprite):
 					self.gs.p1.points += 1
 					self.gs.ball = Ball(gs,1)
 
+				print "PLAYER 1 POINTS = " + str(self.gs.p1.points)
+				print "PLAYER 2 POINTS = " + str(self.gs.p2.points)
+
 
 
 class Net(pygame.sprite.Sprite):
@@ -263,6 +266,24 @@ class Net(pygame.sprite.Sprite):
 			print "net topleft = " + str(self.rect.topleft)
 
 
+class Win(pygame.sprite.Sprite):
+		def __init__(self,gs=None):
+			pygame.sprite.Sprite.__init__(self)
+			self.gs = gs
+
+		def tick(self):
+			if self.gs.p1.points == 10:
+				print "P1 Wins!"
+
+				self.gs.gameOver = True
+			elif self.gs.p2.points == 10:
+				print "P2 Wins!"
+				self.gs.gameOver = True
+			else:
+				pass
+
+
+
 
 class GameSpace:
 	def main(self):
@@ -274,6 +295,9 @@ class GameSpace:
 		self.size = self.width, self.height = 640, 480
 		self.black = 0, 0, 0
 		self.count = 0
+
+		#game over flag
+		self.gameOver = False
 
 		self.numPlayers = 1 #default number of players
 
@@ -297,6 +321,8 @@ class GameSpace:
 
 		self.ball = Ball(self)
 
+		self.win = Win(self)
+
 		self.net = Net(self)
 
 		self.clock = pygame.time.Clock()
@@ -305,7 +331,7 @@ class GameSpace:
 
 
 		# 3) game loop
-		while True:
+		while self.gameOver == False:
 			# 4) clock tick regulation
 			self.clock.tick(60)
 
@@ -333,6 +359,8 @@ class GameSpace:
 			self.p2.tick()
 
 			self.ball.tick()
+
+			self.win.tick()
 
 			# 7) display the game objects
 			self.screen.fill(self.black)
