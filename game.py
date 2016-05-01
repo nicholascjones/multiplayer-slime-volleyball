@@ -7,6 +7,7 @@ import sys
 import math
 import os
 import pygame
+import random
 from pygame.locals import *
 	
 class Slime(pygame.sprite.Sprite):
@@ -39,7 +40,7 @@ class Slime(pygame.sprite.Sprite):
 				sys.exit(1)
 
 
-			self.mv = 5 # """ TEST VALUE #velocity used""" 
+			self.mv = 7 # """ TEST VALUE #velocity used""" 
 			self.vx = 0 #initial x velocity
 			self.vy = 0 #initial y velocity
 
@@ -106,14 +107,19 @@ class Slime(pygame.sprite.Sprite):
 
 
 class Ball(pygame.sprite.Sprite):
-		def __init__(self,gs=None,x=50):
+		def __init__(self,gs=None,winner=1):
 			pygame.sprite.Sprite.__init__(self)
 			self.gs = gs
 			self.BallScale = 15
 			self.image = pygame.image.load("ball.png")
 			self.image = pygame.transform.scale(self.image,(self.BallScale,self.BallScale))
 			self.rect = self.image.get_rect()
-			self.x = x 
+
+			#determines who "serves" based on winner
+			if winner == 1:
+				self.x = random.randint(0,(self.gs.width/2)-20)
+			else: #if player 2 wins point
+				self.x = random.randint((self.gs.width/2)+20,self.gs.width)
 			#self.y = self.gs.height/2
 			self.y = 0
 			self.vx = 0
@@ -156,7 +162,7 @@ class Ball(pygame.sprite.Sprite):
 			elif player == 3: #
 
 				if (self.rect.centery >= 375 and self.rect.centery <= 385):
-					self.vy *= int(-0.5)
+					self.vy *= int(-0.75)
 					print "TOP NET BOUNCE OMG"
 				else:
 
@@ -203,8 +209,14 @@ class Ball(pygame.sprite.Sprite):
 				self.rect = self.rect.move(self.vx,self.vy)
 
 			else:
-				print "POINT"
-				self.gs.ball = Ball(gs)
+				print "end pt"
+
+				if self.rect.centerx <= self.gs.width/2:
+					self.gs.p2.points += 1
+					self.gs.ball = Ball(gs,2)
+				else:
+					self.gs.p1.points += 1
+					self.gs.ball = Ball(gs,1)
 
 
 
