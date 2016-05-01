@@ -3,7 +3,7 @@
 ## Twisted/PyGame Project - CSE 30332
 ## Prof. Collin McMillan
 
-from twisted.internet.protocol import Factory
+from twisted.internet.protocol import ClientFactory
 from twisted.protocols.basic import LineReceiver
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
@@ -16,6 +16,27 @@ from pygame.locals import *
 
 SERVER_HOST = "localhost"
 SERVER_PORT = 40025
+
+class ClientProtocol(LineReceiver):
+
+	def __init__(self, recv):
+		self.recv = recv
+		c.protocol = self
+
+	def lineReceived(self, line):
+		self.recv(line)
+
+	def connectionMade(self):
+		print "Connected to server!"
+
+class ClientFactory(ClientFactory):
+
+	def __init__(self, recv):
+		self.protocol = ClientProtocol
+		self.recv = recv
+
+	def buildProtocol(self, addr):
+		return ClientProtocol(self.recv)
 
 class Slime(pygame.sprite.Sprite):
 		def __init__(self, gs=None,pn=1):
@@ -54,28 +75,16 @@ class Slime(pygame.sprite.Sprite):
 
 		def move(self,code):
 
-			print "MOVING!!"
+			#print "MOVING!!"
 
-			print self.rect.topleft
+			#print self.rect.topleft
 
-			if code == K_RIGHT:
+			if code == K_d:
 				self.rect = self.rect.move(self.mv,0)
-			elif code == K_LEFT:
+			elif code == K_a:
 				self.rect = self.rect.move(-self.mv,0)
-			else:
-				print "invalid movement"
-
-class Net(pygame.sprite.Sprite):
-		def __init__(self,gs=None):
-			pygame.sprite.Sprite.__init__(self)
-			self.gs = gs
-			self.NetScale = 100
-			self.x = self.gs.width/2 - 50
-			self.y = self.gs.height-100
-			self.image = pygame.image.load("net.png")
-			self.image = pygame.transform.scale(self.image,(self.NetScale,self.NetScale))
-			self.rect = self.image.get_rect()
-			self.rect.topleft = (self.x,self.y)
+			#else:
+				#print "invalid movement"
 
 class Ball(pygame.sprite.Sprite):
 		def __init__(self,gs=None,x=0):
@@ -90,86 +99,69 @@ class Ball(pygame.sprite.Sprite):
 			self.y = 0
 			self.rect.topleft = (self.x,self.y)
 
-class Server(LineReceiver):
+class Net(pygame.sprite.Sprite):
+		def __init__(self,gs=None):
+			pygame.sprite.Sprite.__init__(self)
+			self.gs = gs
+			self.NetScale = 100
+			self.x = self.gs.width/2 - 50
+			self.y = self.gs.height-100
+			self.image = pygame.image.load("net.png")
+			self.image = pygame.transform.scale(self.image,(self.NetScale,self.NetScale))
+			self.rect = self.image.get_rect()
+			self.rect.topleft = (self.x,self.y)
 
-	def __init__(self, players):
-		self.players = players
-		self.hasplayers = False
-		self.gs = gs
-
-	def connectionMade(self):
-		if len(self.players) == 0:
-			new = 'player_' + str(len(self.players) + 1)
-			self.players.append(new)
-			self.hasplayers = True
-			self.gs.addplayer(len(self.players))
-			print "Player 1 connected!"
-			self.sendLine(str(1))
-		elif len(self.players) == 1:
-			new = 'player_' + str(len(self.players) + 1)
-			self.players.append(new)
-			self.gs.addplayer(len(self.players))
-			print "Player 2 connected!"
-			self.sendLine(str(2))
-		else:
-			self.sendLine("Server is full!")
-
-class ServerFactory(Factory):
+class Client(object):
 
 	def __init__(self):
-		self.players = []
-
-	def buildProtocol(self, addr):
-		return Server(self.players)
-
-
-class GameSpace:
-
-	def __init__(self):
-		# initialization
+		#1) initialization
 		pygame.init()
 		pygame.key.set_repeat(500, 30)
-
-		# General Game Variables
+		# game variables
+		self.line = 'no message'
 		self.size = self.width, self.height = 640, 480
 		self.screen = pygame.display.set_mode(self.size)
 		self.black = 0, 0, 0
-		self.count = 0
+		self.p = None
 
-		#Physics Objects
 		"""NEED TO UPDATE GRAVITY"""
-		self.g = None  
+		self.g = None
 
-		# set up game objects
-		self.p1 = None
-		self.p2 = None
-		self.ball = Ball(self)
-		self.net = Net(self)
+	def new_line(self, line):
+		self.line = line
+		self.connectionMade()
 
-	def addplayer(self, player):
-		if player == 1:
-			self.p1 = Slime(self, 1)
+	def connectionMade(self):
+		if self.line == str(1) or self.line == str(2):
+			self.ball = Ball(self)
+			self.net = Net(self)
+			self.p = Slime(self, int(self.line))
 		else:
-			self.p2 = Slime(self, 2)
+			print self.line
+			reactor.stop()
 
 	def tick(self):
 		for event in pygame.event.get():
 			if event.type == QUIT:
 				reactor.stop()
+			elif event.type == KEYDOWN:
+				if event.key == pygame.K_q:
+					reactor.stop()
+				elif (event.key == pygame.K_a or event.key == pygame.K_d):
+					self.p.move(event.key)
 
 		self.screen.fill(self.black)
-		if self.p1 != None:
-			self.screen.blit(self.p1.image, self.p1.rect)
-		if self.p2 != None:
-			self.screen.blit(self.p2.image, self.p2.rect)
-		self.screen.blit(self.ball.image, self.ball.rect)
-		self.screen.blit(self.net.image, self.net.rect)
+		if self.p != None:
+			self.screen.blit(self.p.image, self.p.rect)
+			self.screen.blit(self.ball.image, self.ball.rect)
+			self.screen.blit(self.net.image, self.net.rect)
+
 		pygame.display.flip()
 
-gs = GameSpace()
+c = Client()
 
-lc = LoopingCall(gs.tick)
+lc = LoopingCall(c.tick)
 lc.start(1.0/60)
-reactor.listenTCP(SERVER_PORT, ServerFactory())
+reactor.connectTCP(SERVER_HOST, SERVER_PORT, ClientFactory(c.new_line))
 reactor.run()
 lc.stop()
