@@ -169,10 +169,11 @@ class Ball(pygame.sprite.Sprite):
 			elif pygame.sprite.collide_rect(self,self.gs.net):
 				print "bouncing off net!"
 				self.bounce(3)
-			elif (self.rect.top <= 0 and self.vy < -2):
+			elif (self.rect.top <= 0 and self.vy < -2 and self.gs.ceiling == True):
 				print "bounced off ceiling"
 				self.bounce(4)
-			elif ( (self.rect.left <= 0 or self.rect.right >= self.gs.width) ):
+			elif ( (self.rect.left <= 0 or self.rect.right >= self.gs.width) and self.gs.walls == True):
+				print "bounced off wall"
 				self.bounce(5)
 
 			#if hits ground
@@ -218,6 +219,9 @@ class GameSpace:
 		
 		"""NEED TO UPDATE GRAVITY"""
 		self.g = 0.5
+
+		self.ceiling = False
+		self.walls = False
 
 		self.screen = pygame.display.set_mode(self.size)
 
