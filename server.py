@@ -1,3 +1,8 @@
+## Multiplayer Slime Volleyball
+## Nicholas Jones & Brian Mann
+## Twisted/PyGame Project - CSE 30332
+## Prof. Collin McMillan
+
 from twisted.internet.protocol import Factory
 from twisted.protocols.basic import LineReceiver
 from twisted.internet import reactor
@@ -15,9 +20,11 @@ class Server(LineReceiver):
 	def connectionMade(self):
 		new = 'player_' + str(len(self.players) + 1)
 		self.players.append(new)
+		print "New player connected!"
 
 	def lineReceived(self, line):
-		self.sendLine(line)
+		if line == "Number of players?":
+			self.sendLine(str(len(self.players)))
 
 class ServerFactory(Factory):
 

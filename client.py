@@ -1,3 +1,8 @@
+## Multiplayer Slime Volleyball
+## Nicholas Jones & Brian Mann
+## Twisted/PyGame Project - CSE 30332
+## Prof. Collin McMillan
+
 from twisted.internet.protocol import ClientFactory
 from twisted.protocols.basic import LineReceiver
 from twisted.internet import reactor
@@ -21,6 +26,10 @@ class ClientProtocol(LineReceiver):
 	def lineReceived(self, line):
 		self.recv(line)
 
+	def connectionMade(self):
+		print "Connected to server!"
+		self.sendLine("Number of players?")
+
 class ClientFactory(ClientFactory):
 
 	def __init__(self, recv):
@@ -30,24 +39,115 @@ class ClientFactory(ClientFactory):
 	def buildProtocol(self, addr):
 		return ClientProtocol(self.recv)
 
+class Slime(pygame.sprite.Sprite):
+		def __init__(self, gs=None,pn=1):
+			pygame.sprite.Sprite.__init__(self)
+
+			# Member Variable Initialization
+			self.gs = gs
+			self.pn = pn #player number
+
+			self.SpriteScale = 150 #scale for sprites to multiply by
+			
+			
+			## initialization differs by player
+			if self.pn == 1:
+				self.image = pygame.image.load("redslime.png") #sprite image
+				self.image = pygame.transform.scale(self.image,(self.SpriteScale,self.SpriteScale))
+				self.rect = self.image.get_rect()
+				self.rect.topleft = (0,375) #player 1 values
+			elif self.pn == 2:
+				self.image = pygame.image.load("greenslime.png") #sprite image
+				self.image = pygame.transform.scale(self.image,(self.SpriteScale,self.SpriteScale))
+				self.rect = self.image.get_rect()
+				self.rect.topleft = (445,375) #player 2 values
+			else: #if more than two players
+				print "error: only two players allowed to play!"
+				sys.exit(1)
+
+
+			self.mv = 5 # """ TEST VALUE #velocity used""" 
+			self.vx = 0 #initial x velocity
+			self.vy = 0 #initial y velocity
+
+		def tick(self):
+
+			print "tick"
+
+		def move(self,code):
+
+			#print "MOVING!!"
+
+			#print self.rect.topleft
+
+			if code == K_d:
+				self.rect = self.rect.move(self.mv,0)
+			elif code == K_a:
+				self.rect = self.rect.move(-self.mv,0)
+			#else:
+				#print "invalid movement"
+
+class Ball(pygame.sprite.Sprite):
+		def __init__(self,gs=None,x=0):
+			pygame.sprite.Sprite.__init__(self)
+			self.gs = gs
+			self.BallScale = 20
+			self.image = pygame.image.load("ball.png")
+			self.image = pygame.transform.scale(self.image,(self.BallScale,self.BallScale))
+			self.rect = self.image.get_rect()
+			self.x = x 
+			#self.y = self.gs.height/2
+			self.y = 0
+			self.rect.topleft = (self.x,self.y)
+
+class Net(pygame.sprite.Sprite):
+		def __init__(self,gs=None):
+			pygame.sprite.Sprite.__init__(self)
+			self.gs = gs
+			self.NetScale = 100
+			self.x = self.gs.width/2 - 50
+			self.y = self.gs.height-100
+			self.image = pygame.image.load("net.png")
+			self.image = pygame.transform.scale(self.image,(self.NetScale,self.NetScale))
+			self.rect = self.image.get_rect()
+			self.rect.topleft = (self.x,self.y)
+
 class Client(object):
 
 	def __init__(self):
 		self.line = 'no message'
 		pygame.init()
-		self.screen = pygame.display.set_mode((600,600))
+		pygame.key.set_repeat(500, 30)
+		self.size = self.width, self.height = 640, 480
+		self.screen = pygame.display.set_mode(self.size)
+		self.black = 0, 0, 0
+
+		"""NEED TO UPDATE GRAVITY"""
+		self.g = None
+
+		self.p = Slime(self)
+		self.ball = Ball(self)
+		self.net = Net(self)
 
 	def new_line(self, line):
 		self.line = line
 
 	def tick(self):
-		self.screen.fill((0,0,0))
 		for event in pygame.event.get():
 			if event.type == QUIT:
 				reactor.stop()
 			elif event.type == KEYDOWN:
-				self.protocol.sendLine(str(event.key))
-		self.screen.blit(pygame.font.SysFont('mono', 12, bold=True).render(self.line, True, (0, 255, 0)), (20,20))
+				if event.key == pygame.K_q:
+					reactor.stop()
+				elif (event.key == pygame.K_a or event.key == pygame.K_d):
+					self.p.move(event.key)
+
+		self.screen.fill(self.black)
+		#self.screen.blit(pygame.font.SysFont('mono', 12, bold=True).render(self.line, True, (0, 255, 0)), (20,20))
+		self.screen.blit(self.p.image, self.p.rect)
+		self.screen.blit(self.ball.image, self.ball.rect)
+		self.screen.blit(self.net.image, self.net.rect)
+
 		pygame.display.flip()
 
 c = Client()
