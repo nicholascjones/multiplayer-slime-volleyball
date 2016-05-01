@@ -15,7 +15,9 @@ class Server(LineReceiver):
 	def connectionMade(self):
 		new = 'player_' + str(len(self.players) + 1)
 		self.players.append(new)
-		self.sendLine(str(self.players))
+
+	def lineReceived(self, line):
+		self.sendLine(line)
 
 class ServerFactory(Factory):
 
