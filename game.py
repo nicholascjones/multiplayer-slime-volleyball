@@ -17,20 +17,20 @@ class Slime(pygame.sprite.Sprite):
 			self.gs = gs
 			self.pn = pn #player number
 
-			self.SpriteScale = 150 #scale for sprites to multiply by
+			self.SpriteScale = 100 #scale for sprites to multiply by
 			
 			self.ground = self.gs.height
 			
 			## initialization differs by player
 			if self.pn == 1:
 				self.image = pygame.image.load("redslime.png") #sprite image
-				self.image = pygame.transform.scale(self.image,(self.SpriteScale,self.SpriteScale))
+				self.image = pygame.transform.scale(self.image,(self.SpriteScale,int(self.SpriteScale*.6)))
 				self.rect = self.image.get_rect()
 				
 				self.rect.bottomleft = (0,self.ground) #player 1 values
 			elif self.pn == 2:
 				self.image = pygame.image.load("greenslime.png") #sprite image
-				self.image = pygame.transform.scale(self.image,(self.SpriteScale,self.SpriteScale))
+				self.image = pygame.transform.scale(self.image,(self.SpriteScale,int(self.SpriteScale*.6)))
 				self.rect = self.image.get_rect()
 				self.rect.bottomleft = (445,self.ground) #player 2 values
 			else: #if more than two players
@@ -69,10 +69,12 @@ class Slime(pygame.sprite.Sprite):
 
 		def jump(self):
 
-			print "jump on it!"
-
-			self.vy -= 7
-			self.rect = self.rect.move(0,self.vy)
+			if self.rect.bottom >= self.ground:
+				print "jump on it!"
+				self.vy -= 7
+				self.rect = self.rect.move(0,self.vy)
+			else:
+				print "no double jumping!"
 
 
 
@@ -101,7 +103,7 @@ class Ball(pygame.sprite.Sprite):
 				self.bounce()
 
 
-			elif self.rect.top <= (self.gs.height-50):
+			elif self.rect.bottom < self.gs.height-10:
 				self.vy += self.gs.g
 				self.rect = self.rect.move(0,self.vy)
 
