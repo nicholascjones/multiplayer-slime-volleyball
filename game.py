@@ -117,7 +117,7 @@ class Ball(pygame.sprite.Sprite):
 				self.vx = math.cos(ang) * -10   #self.gs.p1.vx
 
 				self.vy *= -1
-				self.vy += math.cos(ang)*self.gs.p1.vy
+				self.vy -= math.cos(ang)*self.gs.p1.vy
 				self.rect = self.rect.move(self.vx,self.vy)
 
 			#bounce from player 2
