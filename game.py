@@ -29,39 +29,52 @@ class Slime(pygame.sprite.Sprite):
 				self.image = pygame.image.load("redslime.png") #sprite image
 				self.image = pygame.transform.scale(self.image,(self.SpriteScale,int(self.SpriteScale*.6)))
 				self.rect = self.image.get_rect()	
-				self.rect.bottomleft = (0,self.ground) #player 1 values
+				self.rect.centerx = self.gs.width/4 #player 1 values
+				self.rect.bottom = self.ground
 			elif self.pn == 2:
 				self.image = pygame.image.load("greenslime.png") #sprite image
 				self.image = pygame.transform.scale(self.image,(self.SpriteScale,int(self.SpriteScale*.6)))
 				self.rect = self.image.get_rect()
-				self.rect.bottomleft = (445,self.ground) #player 2 values
+				self.rect.centerx = 3*self.gs.width/4 #player 2 values
+				self.rect.bottom = self.ground
 			else: #if more than two players
 				print "error: only two players allowed to play!"
 				sys.exit(1)
 
 
-			self.mv = 7 # """ TEST VALUE #velocity used""" 
+			self.mv =  15 # """ TEST VALUE #velocity used""" 
 			self.vx = 0 #initial x velocity
 			self.vy = 0 #initial y velocity
 
 		def tick(self):
 
 			#movement series
+			"""
+			if self.rect.bottom < self.ground:
+				print "uhhh"
+				self.rect.bottom = self.ground
+			"""
+
 			if self.rect.bottom <= self.ground:
+				if pygame.sprite.collide_rect(self,self.gs.net):
+					if self.pn == 1:
+						self.vx = -1
+					elif self.pn == 2:
+						self.vx = 1
 				self.vy += self.gs.g
-				self.rect = self.rect.move(0,self.vy)
+				self.rect = self.rect.move(self.vx,self.vy)
 				print "not ground tick"
-			print "ground tick"
+				print "ground tick"
 			
-			if pygame.sprite.collide_rect(self,self.gs.net):
+			elif pygame.sprite.collide_rect(self,self.gs.net):
 				if self.pn == 1:
-					self.vx = -1
+					self.vx = -2
 				elif self.pn == 2:
-					self.vx = 1
+					self.vx = 2
 			elif self.rect.left <= 0:
-					self.vx = 1
+					self.vx = 2
 			elif self.rect.right >= self.gs.width:
-					self.vx = -1
+					self.vx = -2
 			elif self.vx >= 1:
 				self.vx -= 1
 			elif self.vx <= -1:
@@ -87,11 +100,11 @@ class Slime(pygame.sprite.Sprite):
 			print self.rect.topleft
 
 			if code == K_RIGHT:
-				#self.rect = self.rect.move(self.mv,0)
-				self.vx += self.mv
+			#	self.rect = self.rect.move(self.mv,0)
+				self.vx += self.mv/2
 			elif code == K_LEFT:
-				#self.rect = self.rect.move(-self.mv,0)
-				self.vx -= self.mv
+			#	self.rect = self.rect.move(-self.mv,0)
+				self.vx -= self.mv/2
 			else:
 				print "invalid movement"
 
@@ -117,9 +130,9 @@ class Ball(pygame.sprite.Sprite):
 
 			#determines who "serves" based on winner
 			if winner == 1:
-				self.x = random.randint(0,(self.gs.width/2)-20)
+				self.x = random.randint(self.gs.width/8,(3*self.gs.width/8))
 			else: #if player 2 wins point
-				self.x = random.randint((self.gs.width/2)+20,self.gs.width)
+				self.x = random.randint((5*self.gs.width/8),(7*self.gs.width/8))
 			#self.y = self.gs.height/2
 			self.y = 0
 			self.vx = 0
@@ -135,9 +148,10 @@ class Ball(pygame.sprite.Sprite):
 				ang = math.atan2(yDiff,xDiff)
 
 				""" not exactly sure what to do here """
-				self.vx = math.cos(ang) * -10   #self.gs.p1.vx
+				self.vx = math.cos(ang) * -12.5  #self.gs.p1.vx
+				self.vx += math.cos(ang)*self.gs.p1.vx
 
-				self.vy *= -1
+				self.vy *= -0.9
 				self.vy -= math.cos(ang)*self.gs.p1.vy
 				self.rect = self.rect.move(self.vx,self.vy)
 
@@ -149,9 +163,10 @@ class Ball(pygame.sprite.Sprite):
 				ang = math.atan2(yDiff,xDiff)
 
 				""" not exactly sure what to do here """
-				self.vx = math.cos(ang) * -10   #self.gs.p1.vx
+				self.vx = math.cos(ang) * -12.5 #self.gs.p1.vx
+				self.vx += math.cos(ang)*self.gs.p2.vx
 
-				self.vy *= -1
+				self.vy *= -0.9
 				self.vy -= math.cos(ang)*self.gs.p2.vy
 				self.rect = self.rect.move(self.vx,self.vy)
 
@@ -225,12 +240,13 @@ class Net(pygame.sprite.Sprite):
 			pygame.sprite.Sprite.__init__(self)
 			self.gs = gs
 			self.NetScale = 100
-			self.x = 300
+			#self.x = 300
 			self.y = self.gs.height-100
 			self.image = pygame.image.load("net.png")
 			self.image = pygame.transform.scale(self.image,(self.NetScale/10,self.NetScale))
 			self.rect = self.image.get_rect()
-			self.rect.topleft = (self.x,self.y)
+			self.rect.centerx = self.gs.width/2
+			self.rect.bottom = self.gs.height
 
 			print "net topleft = " + str(self.rect.topleft)
 
@@ -255,7 +271,7 @@ class GameSpace:
 		self.g = 0.5
 
 		#flags to enable ceilings and walls
-		self.ceiling = False
+		self.ceiling = True
 		self.walls = True
 
 		self.screen = pygame.display.set_mode(self.size)
