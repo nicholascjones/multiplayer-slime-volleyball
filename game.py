@@ -17,6 +17,8 @@ class Slime(pygame.sprite.Sprite):
 			self.gs = gs
 			self.pn = pn #player number
 
+			self.points = 0 #player number of points
+
 			self.SpriteScale = 100 #scale for sprites to multiply by
 			
 			self.ground = self.gs.height
@@ -44,6 +46,7 @@ class Slime(pygame.sprite.Sprite):
 
 		def tick(self):
 
+			#movement series
 			if self.rect.bottom <= self.ground:
 				self.vy += self.gs.g
 				self.rect = self.rect.move(0,self.vy)
@@ -51,6 +54,15 @@ class Slime(pygame.sprite.Sprite):
 			print "ground tick"
 			self.rect = self.rect.move(self.vx,0)
 			self.vx = 0
+
+
+			self.by = self.rect.bottom
+			self.bx = self.rect.centerx
+
+
+			print "BOTTOM CENTER COORDINATES:"
+			print "bottom = " + str(self.by)
+			print "center = " + str(self.bx)
 
 		def move(self,code):
 
@@ -79,7 +91,7 @@ class Slime(pygame.sprite.Sprite):
 
 
 class Ball(pygame.sprite.Sprite):
-		def __init__(self,gs=None,x=0):
+		def __init__(self,gs=None,x=50):
 			pygame.sprite.Sprite.__init__(self)
 			self.gs = gs
 			self.BallScale = 15
@@ -91,24 +103,61 @@ class Ball(pygame.sprite.Sprite):
 			self.y = 0
 			self.vx = 0
 			self.vy = 0
-			self.rect.topleft = (self.x,self.y)
+			self.rect.center = (self.x,self.y)
 
-		def bounce(self):
-			self.vy *= -1
-			self.rect = self.rect.move(0,self.vy)
+		def bounce(self,player):
+
+			#bounce from player 1
+			if player == 1:
+				xDiff = self.gs.p1.bx-self.rect.centerx
+				yDiff = self.gs.p1.by-self.rect.centery
+				ang = math.atan2(yDiff,xDiff)
+
+				""" not exactly sure what to do here """
+				self.vx = math.cos(ang) * -10   #self.gs.p1.vx
+
+				self.vy *= -1
+				self.vy += math.cos(ang)*self.gs.p1.vy
+				self.rect = self.rect.move(self.vx,self.vy)
+
+			#bounce from player 2
+			elif player == 2:
+
+				print "PLAYER 2 BOUNCE"
+
+
+			#bounce from net
+			elif player == 3: #
+
+				self.vx *= -(1.25)
+				self.rect = self.rect.move(self.vx,0)
+
+				print "NET BOUNCE"
 
 		def tick(self):
-			if (pygame.sprite.collide_rect(self,self.gs.p1) or pygame.sprite.collide_rect(self,self.gs.p2)):
-				print "bouncing!"
-				self.bounce()
+
+			# collision detection series
+
+			#if collides with a player
+			if pygame.sprite.collide_rect(self,self.gs.p1):
+				print "bouncing p1!"
+				self.bounce(1)
+			elif pygame.sprite.collide_rect(self,self.gs.p2):
+				print "bouncing p2!"
+				self.bounce(2)
+			elif pygame.sprite.collide_rect(self,self.gs.net):
+				print "bouncing off net!"
+				self.bounce(3)
 
 
+			#if hits ground
 			elif self.rect.bottom < self.gs.height-10:
 				self.vy += self.gs.g
-				self.rect = self.rect.move(0,self.vy)
+				self.rect = self.rect.move(self.vx,self.vy)
 
 			else:
 				print "POINT"
+				self.gs.ball = Ball(gs)
 
 
 
@@ -117,10 +166,10 @@ class Net(pygame.sprite.Sprite):
 			pygame.sprite.Sprite.__init__(self)
 			self.gs = gs
 			self.NetScale = 100
-			self.x = self.gs.width/2 - 50
+			self.x = 300
 			self.y = self.gs.height-100
 			self.image = pygame.image.load("net.png")
-			self.image = pygame.transform.scale(self.image,(self.NetScale,self.NetScale))
+			self.image = pygame.transform.scale(self.image,(self.NetScale/10,self.NetScale))
 			self.rect = self.image.get_rect()
 			self.rect.topleft = (self.x,self.y)
 
