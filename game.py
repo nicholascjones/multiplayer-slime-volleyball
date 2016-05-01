@@ -42,7 +42,11 @@ class Slime(pygame.sprite.Sprite):
 
 		def tick(self):
 
-			print "tick"
+			if self.rect.top < 375:
+				self.vy += self.gs.g
+				self.rect = self.rect.move(0,self.vy)
+				print "not ground tick"
+			print "ground tick"
 
 		def move(self,code):
 
@@ -56,6 +60,13 @@ class Slime(pygame.sprite.Sprite):
 				self.rect = self.rect.move(-self.mv,0)
 			else:
 				print "invalid movement"
+
+		def jump(self):
+
+			print "jump on it!"
+
+			self.vy -= 7
+			self.rect = self.rect.move(0,self.vy)
 
 
 class Ball(pygame.sprite.Sprite):
@@ -103,7 +114,7 @@ class GameSpace:
 		#Physics Objects
 		
 		"""NEED TO UPDATE GRAVITY"""
-		self.g = None  
+		self.g = 0.5
 
 		self.screen = pygame.display.set_mode(self.size)
 
@@ -135,6 +146,8 @@ class GameSpace:
 				elif event.type == KEYDOWN:
 					if (event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT):
 						self.p1.move(event.key)
+					elif event.key == pygame.K_UP:
+						self.p1.jump()
 				elif event.type == MOUSEBUTTONUP and self.count == 0:
 					self.black = 100, 100, 100
 					self.count += 1
@@ -143,6 +156,8 @@ class GameSpace:
 					self.count -= 1
 
 			# 6) tick game objects
+
+			self.p1.tick()
 
 			# 7) display the game objects
 			self.screen.fill(self.black)
