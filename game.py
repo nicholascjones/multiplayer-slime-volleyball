@@ -27,8 +27,7 @@ class Slime(pygame.sprite.Sprite):
 			if self.pn == 1:
 				self.image = pygame.image.load("redslime.png") #sprite image
 				self.image = pygame.transform.scale(self.image,(self.SpriteScale,int(self.SpriteScale*.6)))
-				self.rect = self.image.get_rect()
-				
+				self.rect = self.image.get_rect()	
 				self.rect.bottomleft = (0,self.ground) #player 1 values
 			elif self.pn == 2:
 				self.image = pygame.image.load("greenslime.png") #sprite image
@@ -123,6 +122,17 @@ class Ball(pygame.sprite.Sprite):
 			#bounce from player 2
 			elif player == 2:
 
+				xDiff = self.gs.p2.bx-self.rect.centerx
+				yDiff = self.gs.p2.by-self.rect.centery
+				ang = math.atan2(yDiff,xDiff)
+
+				""" not exactly sure what to do here """
+				self.vx = math.cos(ang) * -10   #self.gs.p1.vx
+
+				self.vy *= -1
+				self.vy -= math.cos(ang)*self.gs.p2.vy
+				self.rect = self.rect.move(self.vx,self.vy)
+
 				print "PLAYER 2 BOUNCE"
 
 
@@ -130,13 +140,24 @@ class Ball(pygame.sprite.Sprite):
 			elif player == 3: #
 
 				self.vx *= -(1.25)
-				self.rect = self.rect.move(self.vx,0)
+				self.rect = self.rect.move(self.vx,self.vy)
 
 				print "NET BOUNCE"
+
+			#bounce off ceiling:
+			elif player == 4:
+				self.vy *= -1
+				self.rect = self.rect.move(self.vx,self.vy)
+
+			elif player == 5:
+				self.vx *= -1
+				self.rect = self.rect.move(self.vx,self.vy)
 
 		def tick(self):
 
 			# collision detection series
+
+			print "VY = " + str(self.vy)
 
 			#if collides with a player
 			if pygame.sprite.collide_rect(self,self.gs.p1):
@@ -148,10 +169,14 @@ class Ball(pygame.sprite.Sprite):
 			elif pygame.sprite.collide_rect(self,self.gs.net):
 				print "bouncing off net!"
 				self.bounce(3)
-
+			elif (self.rect.top <= 0 and self.vy < -2):
+				print "bounced off ceiling"
+				self.bounce(4)
+			elif ( (self.rect.left <= 0 or self.rect.right >= self.gs.width) ):
+				self.bounce(5)
 
 			#if hits ground
-			elif self.rect.bottom < self.gs.height-10:
+			if self.rect.bottom < self.gs.height-10:
 				self.vy += self.gs.g
 				self.rect = self.rect.move(self.vx,self.vy)
 
@@ -236,6 +261,8 @@ class GameSpace:
 			# 6) tick game objects
 
 			self.p1.tick()
+
+			self.p2.tick()
 
 			self.ball.tick()
 
