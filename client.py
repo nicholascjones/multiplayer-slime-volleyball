@@ -126,23 +126,29 @@ class Client(object):
 		self.screen = pygame.display.set_mode(self.size)
 		self.black = 0, 0, 0
 		self.p = None
+		self.e = None
 
 		"""NEED TO UPDATE GRAVITY"""
 		self.g = None
 
 	def new_line(self, line):
 		self.line = line
-		self.connectionMade()
-
+		if self.line == str(1) or self.line == str(2) or self.line == "Server is full!":
+			self.connectionMade()
+		else:
+			if self.e != None:
+				self.e.rect.centerx = int(self.line)
 	def connectionMade(self):
 		if self.line == str(1) or self.line == str(2):
 			self.ball = Ball(self)
 			self.net = Net(self)
-			self.p = Slime(self, int(self.line))
-		elif self.line == "Disconnect":
-			print self.line
-			reactor.stop()
-		else:
+			self.value = int(self.line)
+			self.p = Slime(self, self.value)
+			if self.value == 1:
+				self.e = Slime(self, self.value+1)
+			if self.value == 2:
+				self.e = Slime(self, self.value-1)
+		elif self.line == "Server is full!":
 			print self.line
 			reactor.stop()
 
@@ -157,10 +163,13 @@ class Client(object):
 					reactor.stop()
 				elif (event.key == pygame.K_a or event.key == pygame.K_d):
 					self.protocol.transport.write(str(event.key))
+					self.p.move(event.key)
+					
 
 		self.screen.fill(self.black)
 		if self.p != None:
 			self.screen.blit(self.p.image, self.p.rect)
+			self.screen.blit(self.e.image, self.e.rect)
 			self.screen.blit(self.ball.image, self.ball.rect)
 			self.screen.blit(self.net.image, self.net.rect)
 

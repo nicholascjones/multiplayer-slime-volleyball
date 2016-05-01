@@ -191,8 +191,11 @@ class GameSpace:
 		self.screen.fill(self.black)
 		if self.p1 != None:
 			self.screen.blit(self.p1.image, self.p1.rect)
+			if self.p2 != None:
+				tracker.player1.transport.write(str(self.p2.rect.centerx))
 		if self.p2 != None:
 			self.screen.blit(self.p2.image, self.p2.rect)
+			tracker.player2.transport.write(str(self.p1.rect.centerx))
 		self.screen.blit(self.ball.image, self.ball.rect)
 		self.screen.blit(self.net.image, self.net.rect)
 		pygame.display.flip()
