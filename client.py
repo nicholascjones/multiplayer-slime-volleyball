@@ -115,22 +115,30 @@ class Net(pygame.sprite.Sprite):
 class Client(object):
 
 	def __init__(self):
-		self.line = 'no message'
+		#1) initialization
 		pygame.init()
 		pygame.key.set_repeat(500, 30)
+		# game variables
+		self.line = 'no message'
 		self.size = self.width, self.height = 640, 480
 		self.screen = pygame.display.set_mode(self.size)
 		self.black = 0, 0, 0
+		self.linesreceived = 0
 
 		"""NEED TO UPDATE GRAVITY"""
 		self.g = None
 
-		self.p = Slime(self)
-		self.ball = Ball(self)
-		self.net = Net(self)
-
 	def new_line(self, line):
 		self.line = line
+		if self.linesreceived == 0:
+			self.numberofPlayers = int(self.line)
+			self.linesreceived += 1
+			self.connectionMade()
+
+	def connectionMade(self):
+		self.ball = Ball(self)
+		self.net = Net(self)
+		self.p = Slime(self, self.numberofPlayers)
 
 	def tick(self):
 		for event in pygame.event.get():
@@ -143,10 +151,10 @@ class Client(object):
 					self.p.move(event.key)
 
 		self.screen.fill(self.black)
-		#self.screen.blit(pygame.font.SysFont('mono', 12, bold=True).render(self.line, True, (0, 255, 0)), (20,20))
-		self.screen.blit(self.p.image, self.p.rect)
-		self.screen.blit(self.ball.image, self.ball.rect)
-		self.screen.blit(self.net.image, self.net.rect)
+		if self.linesreceived > 0:
+			self.screen.blit(self.p.image, self.p.rect)
+			self.screen.blit(self.ball.image, self.ball.rect)
+			self.screen.blit(self.net.image, self.net.rect)
 
 		pygame.display.flip()
 
