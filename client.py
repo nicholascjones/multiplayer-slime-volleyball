@@ -28,7 +28,6 @@ class ClientProtocol(LineReceiver):
 
 	def connectionMade(self):
 		print "Connected to server!"
-		self.sendLine("Number of players?")
 
 class ClientFactory(ClientFactory):
 
@@ -123,22 +122,23 @@ class Client(object):
 		self.size = self.width, self.height = 640, 480
 		self.screen = pygame.display.set_mode(self.size)
 		self.black = 0, 0, 0
-		self.linesreceived = 0
+		self.p = None
 
 		"""NEED TO UPDATE GRAVITY"""
 		self.g = None
 
 	def new_line(self, line):
 		self.line = line
-		if self.linesreceived == 0:
-			self.numberofPlayers = int(self.line)
-			self.linesreceived += 1
-			self.connectionMade()
+		self.connectionMade()
 
 	def connectionMade(self):
-		self.ball = Ball(self)
-		self.net = Net(self)
-		self.p = Slime(self, self.numberofPlayers)
+		if self.line == str(1) or self.line == str(2):
+			self.ball = Ball(self)
+			self.net = Net(self)
+			self.p = Slime(self, int(self.line))
+		else:
+			print self.line
+			reactor.stop()
 
 	def tick(self):
 		for event in pygame.event.get():
@@ -151,7 +151,7 @@ class Client(object):
 					self.p.move(event.key)
 
 		self.screen.fill(self.black)
-		if self.linesreceived > 0:
+		if self.p != None:
 			self.screen.blit(self.p.image, self.p.rect)
 			self.screen.blit(self.ball.image, self.ball.rect)
 			self.screen.blit(self.net.image, self.net.rect)
