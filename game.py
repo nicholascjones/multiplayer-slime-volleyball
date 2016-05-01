@@ -36,7 +36,7 @@ class Slime(pygame.sprite.Sprite):
 				sys.exit(1)
 
 
-			self.mv = 5 # """ TEST VALUE #velocity used""" 
+			self.mv = 7 # """ TEST VALUE #velocity used""" 
 			self.vx = 0 #initial x velocity
 			self.vy = 0 #initial y velocity
 
@@ -47,6 +47,8 @@ class Slime(pygame.sprite.Sprite):
 				self.rect = self.rect.move(0,self.vy)
 				print "not ground tick"
 			print "ground tick"
+			self.rect = self.rect.move(self.vx,0)
+			self.vx = 0
 
 		def move(self,code):
 
@@ -55,9 +57,11 @@ class Slime(pygame.sprite.Sprite):
 			print self.rect.topleft
 
 			if code == K_RIGHT:
-				self.rect = self.rect.move(self.mv,0)
+				#self.rect = self.rect.move(self.mv,0)
+				self.vx += self.mv
 			elif code == K_LEFT:
-				self.rect = self.rect.move(-self.mv,0)
+				#self.rect = self.rect.move(-self.mv,0)
+				self.vx -= self.mv
 			else:
 				print "invalid movement"
 
@@ -69,19 +73,25 @@ class Slime(pygame.sprite.Sprite):
 			self.rect = self.rect.move(0,self.vy)
 
 
+
 class Ball(pygame.sprite.Sprite):
 		def __init__(self,gs=None,x=0):
 			pygame.sprite.Sprite.__init__(self)
 			self.gs = gs
-			self.BallScale = 20
+			self.BallScale = 15
 			self.image = pygame.image.load("ball.png")
 			self.image = pygame.transform.scale(self.image,(self.BallScale,self.BallScale))
 			self.rect = self.image.get_rect()
 			self.x = x 
 			#self.y = self.gs.height/2
 			self.y = 0
+			self.vx = 0
+			self.vy = 0
 			self.rect.topleft = (self.x,self.y)
 
+		def tick(self):
+		#	self.vy -= 
+			pass
 
 class Net(pygame.sprite.Sprite):
 		def __init__(self,gs=None):
