@@ -312,8 +312,44 @@ class Win(pygame.sprite.Sprite):
 				self.gs.gameOver = True
 
 
+class Menu(pygame.sprite.Sprite):
+		def __init__(self,gs=None):
+			pygame.sprite.Sprite.__init__(self)
+			self.gs = gs
+			self.image = pygame.image.load("redslime.png")
+			self.image = pygame.transform.scale(self.image,(200,120))
+			self.rect = self.image.get_rect()
+			self.rect.center = (self.gs.width/2,3*self.gs.height/4)
+			self.isMenu = True
 
+			self.l2 = "Ceilings are ON. Press 'c' to toggle." 
+			self.l3 = "Walls are ON. Press 'w' to toggle."
+			self.l4 = "This game is being played to " + str(self.gs.maxPts) + " points. Press the up or down arrows to change."
+			self.l5 = "Press ENTER to start!"
 
+		def tick(self):
+			pass
+
+		def changePoints(self,code):
+
+			if code == pygame.K_UP:
+				self.gs.maxPts += 1
+			else:
+				self.gs.maxPts -= 1
+
+		def toggleCeilings(self):
+			if self.gs.ceiling == True:
+				self.gs.ceiling = False
+			else:
+				self.gs.ceiling = True
+
+		def toggleWalls(self):
+			if self.gs.walls == True:
+				self.gs.walls = False
+			else:
+				self.gs.walls = True
+
+ 
 class GameSpace:
 	def main(self):
 		# initialization
@@ -321,30 +357,74 @@ class GameSpace:
 		pygame.key.set_repeat(500, 30)
 
 		# General Game Variables
+
+		#STAYING CONSTANT
 		self.size = self.width, self.height = 640, 480
 		self.black = 100, 100, 100 #gray background preferable
 		self.count = 0
 
-		self.title = "Slime Volleyball"
-
+		self.screen = pygame.display.set_mode(self.size)
+		self.clock = pygame.time.Clock()
+		self.g = 0.5
+		self.ballG = 0.35
 		#game over flag
 		self.gameOver = False
 
+
+
 		self.numPlayers = 1 #default number of players
 
-		self.maxPts = 21
-
-		#Physics Objects
-		
-		"""NEED TO UPDATE GRAVITY"""
-		self.g = 0.5
-		self.ballG = 0.35
+	
+		#CHANGEABLE OBJECTS
 
 		#flags to enable ceilings and walls
 		self.ceiling = True
 		self.walls = True
+		self.maxPts = 21
 
-		self.screen = pygame.display.set_mode(self.size)
+
+
+		self.title = "Slime Volleyball"
+
+		self.menu = Menu(self)
+
+
+
+		while self.menu.isMenu == True:
+
+			self.clock.tick(60)
+
+			for event in pygame.event.get():
+				if event.type == QUIT:
+					sys.exit()
+				elif event.type == KEYDOWN:
+					if (event.key == pygame.K_UP or event.key == pygame.K_DOWN):
+						self.menu.changePoints(event.key)
+					elif event.key == pygame.K_c:
+						self.menu.toggleCeilings()
+					elif event.key == pygame.K_w:
+						self.menu.toggleWalls()
+
+
+			self.menu.tick()
+
+			self.screen.fill(self.black)
+
+			self.screen.blit(self.menu.image,self.menu.rect)
+			self.screen.blit(pygame.font.SysFont('mono', 36, bold=True).render(str(self.title), True, (255,255,255)), ((self.width/4),20))
+			self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.menu.l2), True, (255,255,255)), ((self.width/8),70))
+			self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.menu.l3), True, (255,255,255)), ((self.width/8),120))
+			self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.menu.l4), True, (255,255,255)), ((self.width/8),160))
+			self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.menu.l5), True, (255,255,255)), ((self.width/8),210))
+
+
+			pygame.display.flip()
+
+		
+
+
+
+		
 
 		# set up game objects
 
@@ -359,7 +439,7 @@ class GameSpace:
 
 		self.net = Net(self)
 
-		self.clock = pygame.time.Clock()
+
 
 
 
