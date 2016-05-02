@@ -286,7 +286,10 @@ class Net(pygame.sprite.Sprite):
 			#self.x = 300
 			self.y = self.gs.height-100
 			self.image = pygame.image.load("net.png")
-			self.image = pygame.transform.scale(self.image,(self.NetScale/10,self.NetScale))
+			if self.gs.challenge == False:
+				self.image = pygame.transform.scale(self.image,(self.NetScale/10,self.NetScale))
+			else:
+				self.image = pygame.transform.scale(self.image,(self.NetScale/10,2*self.NetScale))
 			self.rect = self.image.get_rect()
 			self.rect.centerx = self.gs.width/2
 			self.rect.bottom = self.gs.height
@@ -404,6 +407,7 @@ class GameSpace:
 		self.size = self.width, self.height = 640, 480
 		self.black = 100, 100, 100 #gray background preferable
 		self.count = 0
+		self.challenge = False #can only be changed by end game behavior
 
 		self.screen = pygame.display.set_mode(self.size)
 		self.clock = pygame.time.Clock()
@@ -545,15 +549,16 @@ class GameSpace:
 					if event.type == KEYDOWN:
 						if event.key == pygame.K_RETURN:
 							self.gameOver = False
+							self.challenge = True
+							self.net = Net(self)
 						elif event.key == pygame.K_q:
-							self.gameOver = False
-							self.quit = True
+							sys.exit()
 						else:
 							pass
 					elif event.type == MOUSEBUTTONDOWN:
-						self.gameOver = False
-						self.quit = True
-					else:
+						sys.exit()
+					elif event.type == QUIT:
+						sys.exit()
 						pass
 
 
