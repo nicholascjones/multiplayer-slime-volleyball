@@ -232,11 +232,11 @@ class Ball(pygame.sprite.Sprite):
 
 			#if hits ground
 			if self.rect.bottom < self.gs.height-10:
-				self.vy += self.gs.g
+				self.vy += self.gs.ballG
 				self.rect = self.rect.move(self.vx,self.vy)
 
 			else:
-				print "end pt"
+				print "point awarded"
 
 				if self.rect.centerx <= self.gs.width/2:
 					self.gs.p2.points += 1
@@ -272,9 +272,9 @@ class Win(pygame.sprite.Sprite):
 			self.gs = gs
 
 		def tick(self):
-			if self.gs.p1.points == 10:
+			if self.gs.p1.points == self.gs.maxPts:
 				self.win(1)
-			elif self.gs.p2.points == 10:
+			elif self.gs.p2.points == self.gs.maxPts:
 				self.win(2)
 			else:
 				pass
@@ -302,10 +302,13 @@ class GameSpace:
 
 		self.numPlayers = 1 #default number of players
 
+		self.maxPts = 21
+
 		#Physics Objects
 		
 		"""NEED TO UPDATE GRAVITY"""
 		self.g = 0.5
+		self.ballG = 0.35
 
 		#flags to enable ceilings and walls
 		self.ceiling = True
