@@ -313,6 +313,8 @@ class GameSpace:
 		self.p2 = None
 		self.ball = Ball(self)
 		self.net = Net(self)
+		self.ceiling = True
+		self.walls = True
 
 	def addplayer(self, player):
 		if player == 1:
@@ -327,7 +329,9 @@ class GameSpace:
 				tracker.player1.transport.write(str(self.p2.rect.centerx)+"|"+str(self.p2.rect.centery)+"|"+str(self.ball.rect.centerx)+"|"+str(self.ball.rect.centery))
 		if self.p2 != None:
 			self.p2.tick()
+			self.ball.tick()
 			tracker.player2.transport.write(str(self.p1.rect.centerx)+"|"+str(self.p1.rect.centery)+"|"+str(self.ball.rect.centerx)+"|"+str(self.ball.rect.centery))
+
 
 tracker = Tracker()
 gs = GameSpace()
