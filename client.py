@@ -19,12 +19,14 @@ SERVER_HOST = "localhost"
 SERVER_PORT = 40025
 
 class ClientProtocol(Protocol):
-
+	# basic Twisted client
 	def __init__(self, recv):
+		# link the client to the gamespace
 		self.recv = recv
 		c.protocol = self
 
 	def dataReceived(self, data):
+		# send all data from the client to the gamespace
 		self.recv(data)
 
 	def connectionMade(self):
@@ -34,7 +36,7 @@ class ClientProtocol(Protocol):
 		c.exit = True
 
 class ClientFactory(ClientFactory):
-
+	# basic Twisted clientfactory
 	def __init__(self, recv):
 		self.protocol = ClientProtocol
 		self.recv = recv
@@ -263,6 +265,7 @@ class Client(object):
 		self.p = None
 		self.e = None
 		self.ball = None
+		self.connected = False
 
 		"""NEED TO UPDATE GRAVITY"""
 		self.g = 0.5
@@ -272,10 +275,14 @@ class Client(object):
 		self.walls = True
 
 	def new_line(self, line):
+		# how each client updates the game from the server
 		self.line = line
-		if self.line == str(1) or self.line == str(2) or self.line == "Server is full!":
+		# determine what is being sent over the network
+		if self.connected == False and (self.line == str(1) or self.line == str(2) or self.line == "Server is full!"):
+			self.connected = True
 			self.connectionMade()
 		else:
+			# separate the string for data processing
 			components = self.line.split("|")
 			x = components[0]
 			y = components[1]
@@ -283,12 +290,13 @@ class Client(object):
 			by = components[3]
 			if self.e != None:
 				self.e.rect.centerx = int(x)
-				self.e.rect.centery = int(y)
+				self.e.rect.bottom = int(y)
 			if self.ball != None:
 				self.ball.rect.centerx = int(bx)
 				self.ball.rect.centery = int(by)
 
 	def connectionMade(self):
+		# determine which player the client is
 		if self.line == str(1) or self.line == str(2):
 			self.net = Net(self)
 			self.ball = Ball(self)
@@ -303,6 +311,7 @@ class Client(object):
 			reactor.stop()
 
 	def tick(self):
+		# update the screen info and obtain user input
 		if c.exit == True:
 			reactor.stop()
 		for event in pygame.event.get():
@@ -318,10 +327,9 @@ class Client(object):
 					self.protocol.transport.write(str(event.key))
 					self.p.jump()	
 
+		# only tick oneself
 		if self.p != None:
 			self.p.tick()
-		if self.e != None:
-			self.e.tick()
 
 		self.screen.fill(self.black)
 		if self.p != None:
@@ -335,7 +343,7 @@ class Client(object):
 c = Client()
 
 lc = LoopingCall(c.tick)
-lc.start(1.0/60)
+lc.start(1.0/30)
 reactor.connectTCP(SERVER_HOST, SERVER_PORT, ClientFactory(c.new_line))
 reactor.run()
 lc.stop()

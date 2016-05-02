@@ -228,32 +228,41 @@ class Net(pygame.sprite.Sprite):
 class Server(Protocol):
 
 	def __init__(self, players, addr):
+		# track number of players
 		self.players = players
 		self.addr = addr
+		# store the gamestate for easier communication to clients
 		self.gs = gs
+		# store each client's information upon creation in "proxy" class
 		if len(self.players) == 0:
 			tracker.player1 = self
 		elif len(self.players) == 1:
 			tracker.player2 = self
 
 	def connectionMade(self):
+		# determine which player the client should be
+		# first connect is player 1
 		if len(self.players) == 0:
 			new = 'player_' + str(len(self.players) + 1)
 			self.players.append(new)
 			self.gs.addplayer(len(self.players))
 			print "Player 1 connected!"
 			self.transport.write(str(1))
+		# second connect is player 2
 		elif len(self.players) == 1:
 			new = 'player_' + str(len(self.players) + 1)
 			self.players.append(new)
 			self.gs.addplayer(len(self.players))
 			print "Player 2 connected!"
 			self.transport.write(str(2))
+		# more than two connects is a full server, reject new client
 		else:
 			self.transport.write("Server is full!")
 	def connectionLost(self, reason):
+		# determine which client disconnected
 		if self == tracker.player1:
 			print "Player 1 disconnected!"
+			# force other player to disconnect, ending game
 			if self.gs.p2 != None:
 				tracker.player2.transport.loseConnection()
 		elif self == tracker.player2:
@@ -261,15 +270,18 @@ class Server(Protocol):
 			tracker.player1.transport.loseConnection()
 		else:
 			return
+		# reset game state
 		self.gs.p1 = None
 		self.gs.p2 = None
 		self.players.pop()
 
 	def dataReceived(self, data):
+		# determine what key the player's pressed
 		if data == str(100):
 			key = pygame.K_d
 		elif data == str(97):
 			key = pygame.K_a
+		# if space bar, call jump instead of move
 		elif data == str(32):
 			if self == tracker.player1:
 				self.gs.p1.jump()
@@ -277,13 +289,14 @@ class Server(Protocol):
 			if self == tracker.player2:
 				self.gs.p2.jump()
 				return
+		# send the specified key to the game state
 		if self == tracker.player1:
 			self.gs.p1.move(key)
 		elif self == tracker.player2:
 			self.gs.p2.move(key)
 
 class ServerFactory(Factory):
-
+	# basic Twisted factory
 	def __init__(self):
 		self.players = []
 
@@ -291,7 +304,8 @@ class ServerFactory(Factory):
 		return Server(self.players, addr)
 
 class Tracker:
-	
+	# proxy class to store which client is which to allow for easier
+	# data distribution
 	def __init__(self):
 		self.player1 = Server
 		self.player2 = Server
@@ -324,21 +338,31 @@ class GameSpace:
 			self.p2 = Slime(self, 2)
 
 	def tick(self):
+		# make sure there is a client
 		if self.p1 != None:
+			# update player 1
 			self.p1.tick()
 			if self.p2 != None:
-				tracker.player1.transport.write(str(self.p2.rect.centerx)+"|"+str(self.p2.rect.centery)+"|"+str(self.ball.rect.centerx)+"|"+str(self.ball.rect.centery))
+				# if there's a player 2, update
+				# player 1's info over the network to 
+				# player 2, as well as the ball
+				tracker.player1.transport.write(str(self.p2.rect.centerx)+"|"+str(self.p2.rect.bottom)+"|"+str(self.ball.rect.centerx)+"|"+str(self.ball.rect.centery))
 		if self.p2 != None:
+			# update player 2
 			self.p2.tick()
+			# game does not start until two players join,
+			# therefore, start ball movement on player 2
+			# joining lobby
 			self.ball.tick()
-			tracker.player2.transport.write(str(self.p1.rect.centerx)+"|"+str(self.p1.rect.centery)+"|"+str(self.ball.rect.centerx)+"|"+str(self.ball.rect.centery))
+			# send to player 2 the ball and player 1's info
+			tracker.player2.transport.write(str(self.p1.rect.centerx)+"|"+str(self.p1.rect.bottom)+"|"+str(self.ball.rect.centerx)+"|"+str(self.ball.rect.centery))
 
 
 tracker = Tracker()
 gs = GameSpace()
 
 lc = LoopingCall(gs.tick)
-lc.start(1.0/60)
+lc.start(1.0/30)
 reactor.listenTCP(SERVER_PORT, ServerFactory())
 reactor.run()
 lc.stop()
