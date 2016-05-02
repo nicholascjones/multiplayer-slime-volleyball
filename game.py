@@ -44,7 +44,7 @@ class Slime(pygame.sprite.Sprite):
 				sys.exit(1)
 
 
-			self.mv =  15 # """ TEST VALUE #velocity used""" 
+			self.mv =  8 # """ TEST VALUE #velocity used""" 
 			self.vx = 0 #initial x velocity
 			self.vy = 0 #initial y velocity
 
@@ -300,9 +300,9 @@ class Win(pygame.sprite.Sprite):
 			self.gs = gs
 
 		def tick(self):
-			if self.gs.p1.points == self.gs.maxPts:
+			if self.gs.p1.points >= self.gs.maxPts:
 				self.win(1)
-			elif self.gs.p2.points == self.gs.maxPts:
+			elif self.gs.p2.points >= self.gs.maxPts:
 				self.win(2)
 			else:
 				pass
@@ -368,7 +368,7 @@ class GameSpace:
 	def main(self):
 		# initialization
 		pygame.init()
-		pygame.key.set_repeat(500, 30)
+		pygame.key.set_repeat(1,50)
 
 		# General Game Variables
 
@@ -450,7 +450,7 @@ class GameSpace:
 
 		self.p1 = Slime(self,self.numPlayers) #player 1
 		self.numPlayers += 1
-		self.p2 = Slime(self,self.numPlayers,True) #computer
+		self.p2 = Slime(self,self.numPlayers,True) #player 2 is human
 		self.numPlayers += 1
 
 		self.ball = Ball(self)
@@ -458,10 +458,6 @@ class GameSpace:
 		self.win = Win(self)
 
 		self.net = Net(self)
-
-
-
-
 
 
 		# 3) game loop
