@@ -80,21 +80,22 @@ class Slime(pygame.sprite.Sprite):
 				print "not ground tick"
 				print "ground tick"
 			
-			elif pygame.sprite.collide_rect(self,self.gs.net):
-				if self.pn == 1:
-					self.vx = -2
-				elif self.pn == 2:
-					self.vx = 2
-			elif self.rect.left <= 0:
-					self.vx = 2
-			elif self.rect.right >= self.gs.width:
-					self.vx = -2
-			elif self.vx >= 1:
-				self.vx -= 1
-			elif self.vx <= -1:
-				self.vx += 1
 			else:
-				pass
+				if pygame.sprite.collide_rect(self,self.gs.net):
+					if self.pn == 1:
+						self.vx = -2
+					elif self.pn == 2:
+						self.vx = 2
+				elif self.rect.left <= 0:
+						self.vx = 2
+				elif self.rect.right >= self.gs.width:
+						self.vx = -2
+				elif self.vx >= 1:
+					self.vx -= 1
+				elif self.vx <= -1:
+					self.vx += 1
+				else:
+					pass
 
 			self.rect = self.rect.move(self.vx,0)
 
@@ -171,7 +172,7 @@ class Ball(pygame.sprite.Sprite):
 			#bounce from player 1
 			if player == 1:
 				xDiff = self.gs.p1.bx-self.rect.centerx
-				yDiff = self.gs.p1.by-self.rect.centery#+(xDiff/self.rect.centery)
+				yDiff = self.gs.p1.by-self.rect.centery+(xDiff/self.rect.centery)
 				ang = math.atan2(yDiff,xDiff)
 
 				""" not exactly sure what to do here """
@@ -190,7 +191,7 @@ class Ball(pygame.sprite.Sprite):
 			elif player == 2:
 
 				xDiff = self.gs.p2.bx-self.rect.centerx
-				yDiff = self.gs.p2.by-self.rect.centery#+(xDiff/self.rect.centery)
+				yDiff = self.gs.p2.by-self.rect.centery+(xDiff/self.rect.centery)
 				ang = math.atan2(yDiff,xDiff)
 
 				""" not exactly sure what to do here """
