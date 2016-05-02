@@ -12,6 +12,7 @@ import sys
 import math
 import os
 import pygame
+import random
 from pygame.locals import *
 
 SERVER_HOST = "localhost"
@@ -42,14 +43,19 @@ class ClientFactory(ClientFactory):
 		return ClientProtocol(self.recv)
 
 class Slime(pygame.sprite.Sprite):
-		def __init__(self, gs=None,pn=1):
+		def __init__(self, gs=None,pn=1,human=True):
 			pygame.sprite.Sprite.__init__(self)
 
 			# Member Variable Initialization
 			self.gs = gs
 			self.pn = pn #player number
 
+			self.human = human
+
+			self.points = 0 #player number of points
+
 			self.SpriteScale = 100 #scale for sprites to multiply by
+			
 			self.ground = self.gs.height
 			
 			## initialization differs by player
@@ -57,85 +63,191 @@ class Slime(pygame.sprite.Sprite):
 				self.image = pygame.image.load("redslime.png") #sprite image
 				self.image = pygame.transform.scale(self.image,(self.SpriteScale,int(self.SpriteScale*.6)))
 				self.rect = self.image.get_rect()
-				self.rect.bottomleft = (0, self.ground) #player 1 values
+
+				self.rect.centerx = self.gs.width/4
+				# player 1 values
+				self.rect.bottom = self.ground
 			elif self.pn == 2:
 				self.image = pygame.image.load("greenslime.png") #sprite image
 				self.image = pygame.transform.scale(self.image,(self.SpriteScale,int(self.SpriteScale*.6)))
 				self.rect = self.image.get_rect()
-				self.rect.bottomleft = (445, self.ground) #player 2 values
-			else: #if more than two players
-				print "error: only two players allowed to play!"
-				sys.exit(1)
+				self.rect.centerx = 3*self.gs.width/4
+				#player 2 values
+				self.rect.bottom = self.ground 
 
-
-			self.mv = 7 # """ TEST VALUE #velocity used""" 
+			self.mv = 15 # """ TEST VALUE #velocity used""" 
 			self.vx = 0 #initial x velocity
 			self.vy = 0 #initial y velocity
 
 		def tick(self):
+
+			#movement series
 			if self.rect.bottom <= self.ground:
+				if pygame.sprite.collide_rect(self,self.gs.net):
+					if self.pn == 1:
+						self.vx = -1
+					elif self.pn == 2:
+						self.vx = 1
 				self.vy += self.gs.g
-				self.rect = self.rect.move(0, self.vy)
-			self.rect = self.rect.move(self.vx, 0)
-			self.vx = 0
+				self.rect = self.rect.move(self.vx,self.vy)
+			
+			elif pygame.sprite.collide_rect(self,self.gs.net):
+				if self.pn == 1:
+					self.vx = -2
+				elif self.pn == 2:
+					self.vx = 2
+			elif self.rect.left <= 0:
+					self.vx = 2
+			elif self.rect.right >= self.gs.width:
+					self.vx = -2
+			elif self.vx >= 1:
+				self.vx -= 1
+			elif self.vx <= -1:
+				self.vx += 1
+			else:
+				pass
+
+			self.rect = self.rect.move(self.vx,0)
+
+
+			self.by = self.rect.bottom
+			self.bx = self.rect.centerx
 
 		def move(self,code):
 
-			#print "MOVING!!"
+			if self.human == True:
 
-			#print self.rect.topleft
+				if code == K_d:
+				#	self.rect = self.rect.move(self.mv,0)
+					self.vx += self.mv/2
+				elif code == K_a:
+				#	self.rect = self.rect.move(-self.mv,0)
+					self.vx -= self.mv/2
 
-			if code == K_d:
-				#self.rect = self.rect.move(self.mv,0)
-				self.vx += self.mv
-			elif code == K_a:
-				#self.rect = self.rect.move(-self.mv,0)
-				self.vx -= self.mv
-			#else:
-				#print "invalid movement"
+			else:
+				self.vx = self.gs.ball.vx
 
 		def jump(self):
+
 			if self.rect.bottom >= self.ground:
 				self.vy -= 7
-				self.rect = self.rect.move(0, self.vy)
+				self.rect = self.rect.move(0,self.vy)
 
 class Ball(pygame.sprite.Sprite):
-		def __init__(self,gs=None,x=0):
+		def __init__(self,gs=None,winner=1):
 			pygame.sprite.Sprite.__init__(self)
 			self.gs = gs
 			self.BallScale = 15
 			self.image = pygame.image.load("ball.png")
 			self.image = pygame.transform.scale(self.image,(self.BallScale,self.BallScale))
 			self.rect = self.image.get_rect()
-			self.x = x 
+
+			#determines who "serves" based on winner
+			if winner == 1:
+				self.x = random.randint(self.gs.width/8,(3*self.gs.width/8))
+			else: #if player 2 wins point
+				self.x = random.randint((5*self.gs.width/8),(7*self.gs.width/8))
 			#self.y = self.gs.height/2
 			self.y = 0
 			self.vx = 0
 			self.vy = 0
-			self.rect.topleft = (self.x,self.y)
+			self.rect.center = (self.x,self.y)
 
-		def bounce(self):
-			self.vy *= -1
-			self.rect = self.rect.move(0, self.vy)
+		def bounce(self,player):
+
+			rf = random.randint(-1,1)
+			rs = random.random()
+			#bounce from player 1
+			if player == 1:
+				xDiff = self.gs.p.bx-self.rect.centerx
+				yDiff = self.gs.p.by-self.rect.centery#+(xDiff/self.rect.centery)
+				ang = math.atan2(yDiff,xDiff)
+
+				""" not exactly sure what to do here """
+				self.vx = math.cos(ang) * -12.5  #self.gs.p1.vx
+				self.vx += math.cos(ang)*self.gs.p.vx
+				self.vx += (int(rf*rs))
+
+				self.vy *= -0.9
+				self.vy -= math.cos(ang)*self.gs.p.vy
+				self.rect = self.rect.move(self.vx,self.vy)
+
+			#bounce from player 2
+			elif player == 2:
+
+				xDiff = self.gs.e.bx-self.rect.centerx
+				yDiff = self.gs.e.by-self.rect.centery#+(xDiff/self.rect.centery)
+				ang = math.atan2(yDiff,xDiff)
+
+				""" not exactly sure what to do here """
+				self.vx = math.cos(ang) * -12.5 #self.gs.p1.vx
+				self.vx += math.cos(ang)*self.gs.e.vx
+				self.vx += (int(rf*rs))
+
+				self.vy *= -0.9
+				self.vy -= math.cos(ang)*self.gs.e.vy
+				self.rect = self.rect.move(self.vx,self.vy)
+
+			#bounce from net
+			elif player == 3: #
+
+				if (self.rect.centery >= 375 and self.rect.centery <= 385):
+					self.vy *= int(-0.75)
+				else:
+					self.vx *= -(1.25)
+					self.rect = self.rect.move(self.vx,self.vy)
+
+			#bounce off ceiling:
+			elif player == 4:
+				self.vy *= -1
+				self.rect = self.rect.move(self.vx,self.vy)
+
+			elif player == 5:
+				self.vx *= -1
+				self.rect = self.rect.move(self.vx,self.vy)
 
 		def tick(self):
-			if (pygame.sprite.collide_rect(self, self.gs.p) or pygame.sprite.collide_rect(self, self.gs.e)):
-				self.bounce()
-			elif self.rect.bottom < self.gs.height-10:
+
+			# collision detection series
+			#if collides with a player
+			if pygame.sprite.collide_rect(self,self.gs.p):
+				self.bounce(1)
+			elif pygame.sprite.collide_rect(self,self.gs.e):
+				self.bounce(2)
+			elif pygame.sprite.collide_rect(self,self.gs.net):
+				self.bounce(3)
+			elif (self.rect.top <= 0 and self.vy < -2 and self.gs.ceiling == True):
+				self.bounce(4)
+			elif ( (self.rect.left <= 0 or self.rect.right >= self.gs.width) and self.gs.walls == True):
+				self.bounce(5)
+
+			#if hits ground
+			if self.rect.bottom < self.gs.height-10:
 				self.vy += self.gs.g
-				self.rect = self.rect.move(0, self.vy)
+				self.rect = self.rect.move(self.vx,self.vy)
+
+			else:
+
+				if self.rect.centerx <= self.gs.width/2:
+					self.gs.e.points += 1
+					self.gs.ball = Ball(self.gs,2)
+				else:
+					self.gs.p.points += 1
+					self.gs.ball = Ball(self.gs,1)
+
 
 class Net(pygame.sprite.Sprite):
 		def __init__(self,gs=None):
 			pygame.sprite.Sprite.__init__(self)
 			self.gs = gs
 			self.NetScale = 100
-			self.x = self.gs.width/2 - 50
+			#self.x = 300
 			self.y = self.gs.height-100
 			self.image = pygame.image.load("net.png")
-			self.image = pygame.transform.scale(self.image,(self.NetScale,self.NetScale))
+			self.image = pygame.transform.scale(self.image,(self.NetScale/10,self.NetScale))
 			self.rect = self.image.get_rect()
-			self.rect.topleft = (self.x,self.y)
+			self.rect.centerx = self.gs.width/2
+			self.rect.bottom = self.gs.height
 
 class Client(object):
 
@@ -147,13 +259,16 @@ class Client(object):
 		# game variables
 		self.size = self.width, self.height = 640, 480
 		self.screen = pygame.display.set_mode(self.size)
-		self.black = 0, 0, 0
+		self.black = 100, 100, 100
 		self.p = None
 		self.e = None
 		self.ball = None
 
 		"""NEED TO UPDATE GRAVITY"""
 		self.g = 0.5
+
+		self.ceiling = True
+		self.walls = True
 
 	def new_line(self, line):
 		self.line = line
