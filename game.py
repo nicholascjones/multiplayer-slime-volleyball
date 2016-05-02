@@ -211,12 +211,17 @@ class Ball(pygame.sprite.Sprite):
 			#bounce from net
 			elif player == 3: #
 
-				if (self.rect.centery >= 375 and self.rect.centery <= 385):
+				if (self.rect.centery >= (self.gs.net.rect.top-5) and self.rect.centery <= (self.gs.net.rect.top+5)):
 					self.vy *= int(-0.75)
 					print "TOP NET BOUNCE OMG"
-				else:
 
-					self.vx *= -(1.25)
+				else:
+					if self.rect.centerx < self.gs.width/2:
+						self.rect = self.rect.move(-2,0)
+					else:
+						self.rect = self.rect.move(2,0)
+
+					self.vx *= -1
 					self.rect = self.rect.move(self.vx,self.vy)
 
 				print "NET BOUNCE"
