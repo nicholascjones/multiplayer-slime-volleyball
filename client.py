@@ -74,7 +74,7 @@ class Slime(pygame.sprite.Sprite):
 				self.rect.centerx = 3*self.gs.width/4 #player 2 values
 				self.rect.bottom = self.ground
 
-			self.mv =  15 # """ TEST VALUE #velocity used""" 
+			self.mv =  8 # """ TEST VALUE #velocity used""" 
 			self.vx = 0 #initial x velocity
 			self.vy = 0 #initial y velocity
 
@@ -124,7 +124,6 @@ class Slime(pygame.sprite.Sprite):
 			self.by = self.rect.bottom
 			self.bx = self.rect.centerx
 
-
 		def move(self,code):
 
 
@@ -136,6 +135,7 @@ class Slime(pygame.sprite.Sprite):
 				elif code == K_a:
 				#	self.rect = self.rect.move(-self.mv,0)
 					self.vx -= self.mv/2
+
 			else:
 				self.vx = self.gs.ball.vx
 
@@ -230,7 +230,6 @@ class Ball(pygame.sprite.Sprite):
 
 			# collision detection series
 
-
 			#if collides with a player
 			if pygame.sprite.collide_rect(self,self.gs.p1):
 				self.bounce(1)
@@ -249,7 +248,6 @@ class Ball(pygame.sprite.Sprite):
 				self.rect = self.rect.move(self.vx,self.vy)
 
 			else:
-
 				if self.rect.centerx <= self.gs.width/2:
 					self.point(2)
 				else:
@@ -266,6 +264,7 @@ class Ball(pygame.sprite.Sprite):
 				self.gs.p2.points += 1
 				self.gs.ball = Ball(gs,2)
 
+
 class Net(pygame.sprite.Sprite):
 		def __init__(self,gs=None):
 			pygame.sprite.Sprite.__init__(self)
@@ -278,6 +277,23 @@ class Net(pygame.sprite.Sprite):
 			self.rect = self.image.get_rect()
 			self.rect.centerx = self.gs.width/2
 			self.rect.bottom = self.gs.height
+
+class Win(pygame.sprite.Sprite):
+		def __init__(self,gs=None):
+			pygame.sprite.Sprite.__init__(self)
+			self.gs = gs
+
+		def tick(self):
+			if self.gs.p.points >= self.gs.maxPts:
+				self.win(1)
+			elif self.gs.e.points >= self.gs.maxPts:
+				self.win(2)
+			else:
+				pass
+
+		def win(self,player):
+				self.gs.gameOver = True
+				self.gs.endGame = EndGame(player, self.gs)
 
 class Menu(pygame.sprite.Sprite):
 		def __init__(self,gs=None):
@@ -315,7 +331,7 @@ class Menu(pygame.sprite.Sprite):
 
 			if code == pygame.K_UP:
 				self.gs.maxPts += 1
-			else:
+			elif self.gs.maxPts > 1:
 				self.gs.maxPts -= 1
 
 		def toggleCeilings(self):
@@ -330,13 +346,38 @@ class Menu(pygame.sprite.Sprite):
 			else:
 				self.gs.walls = True
 
+class EndGame(pygame.sprite.Sprite):
+		def __init__(self,winner,gs=None):
+			pygame.sprite.Sprite.__init__(self)
+			self.gs = gs
+			if winner == 1:
+				self.image = pygame.image.load("redslime.png")
+				self.winMsg = "Congratulations, Player 1!"
+				self.loseMsg = "Player 2...better luck next time!"
+			else:
+				self.image = pygame.image.load("greenslime.png")
+				self.winMsg = "Congratulations, Player 2"
+				self.loseMsg = "Player 1...better luck next time!"
+
+			self.win2 = "YOU WIN!"
+			self.image = pygame.transform.scale(self.image,(200,120))
+			self.rect = self.image.get_rect()
+			self.rect.center = (self.gs.width/2,(3*self.gs.height/4)+30)
+			self.rMsg = "To play a CHALLENGE GAME, press ENTER"
+			self.qMsg = "To quit, click or press the 'q' key."
+			self.gameOver = True
+
+			self.gs.p.points = 0
+			self.gs.e.points = 0
+
+
 class Client(object):
 
 	def __init__(self):
 		#1) initialization
 		self.exit = False
 		pygame.init()
-		pygame.key.set_repeat(500, 30)
+		pygame.key.set_repeat(1, 50)
 		# game variables
 		self.size = self.width, self.height = 640, 480
 		self.screen = pygame.display.set_mode(self.size)
@@ -345,8 +386,9 @@ class Client(object):
 		self.p = None
 		self.e = None
 		self.ball = None
+		self.gameOver = False
 		self.connected = False
-		self.maxPts = 21
+		self.maxPts = 25
 		self.menu = Menu(self)
 
 		"""NEED TO UPDATE GRAVITY"""
@@ -367,12 +409,15 @@ class Client(object):
 		if self.menu.isMenu == False:
 			# separate the string for data processing
 			components = self.line.split("|")
-			x = components[0]
-			y = components[1]
-			bx = components[2]
-			by = components[3]
-			ppoints = components[4]
-			epoints = components[5]
+			try:
+				x = components[0]
+				y = components[1]
+				bx = components[2]
+				by = components[3]
+				ppoints = components[4]
+				epoints = components[5]
+			except:
+				return
 			if self.e != None:
 				self.e.rect.centerx = int(x)
 				self.e.rect.bottom = int(y)
@@ -382,14 +427,19 @@ class Client(object):
 				self.ball.rect.centerx = int(bx)
 				self.ball.rect.centery = int(by)
 		else:
-			if self.line == "ceiling":
-				self.menu.toggleCeilings()
-			elif self.line == "walls":
-				self.menu.toggleWalls()
-			elif self.line == "up":
-				self.menu.changePoints(K_UP)
-			elif self.line == "down":
-				self.menu.changePoints(K_DOWN)
+			components = self.line.split("|")
+			pts = components[0]
+			ceiling = components[1]
+			walls = components[2]
+			if ceiling == "True":
+				self.ceiling=True
+			else:
+				self.ceiling=False
+			if walls == "True":
+				self.walls=True
+			else:
+				self.walls=False
+			self.maxPts = int(pts)
 
 	def connectionMade(self):
 		# determine which player the client is
@@ -444,7 +494,7 @@ class Client(object):
 			self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.menu.l5), True, (150,150,255)), ((self.width/8),270))
 
 			pygame.display.flip()
-		else:
+		elif self.menu.isMenu == False and self.gameOver == False:
 			for event in pygame.event.get():
 				if event.type == QUIT:
 					reactor.stop()
@@ -475,6 +525,27 @@ class Client(object):
 
 				# title
 				self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.title), True, (255,255,255)), ((5*self.width/16)+15,20))
+
+			pygame.display.flip()
+		elif self.gameOver == True:
+			for event in pygame.event.get():
+				if event.type == QUIT:
+					reactor.stop()
+				elif event.type == KEYDOWN:
+					if event.key == pygame.K_q:
+						reactor.stop()
+					elif event.key == pygame.K_RETURN:
+						self.protocol.transport.write(str(event.key))
+				elif event.type == MOUSEBUTTONDOWN:
+					reactor.stop()
+
+			self.screen.fill(self.black)
+			self.screen.blit(self.endGame.image, self.endGame.rect)
+			self.screen.blit(pygame.font.SysFont('mono', 32, bold=True).render(str(self.endGame.winMsg), True, (255,255,255)), ((self.width/8),20))
+			self.screen.blit(pygame.font.SysFont('mono', 32, bold=True).render(str(self.endGame.win2), True, (255,255,255)), ((self.width/3),70))
+			self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.endGame.loseMsg), True, (150,150,255)), ((self.width/8),170))
+			self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.endGame.rMsg), True, (150,150,255)), ((self.width/8),220))
+			self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.endGame.qMsg), True, (150,150,255)), ((self.width/8),270))
 
 			pygame.display.flip()
 
