@@ -264,7 +264,6 @@ class Win(pygame.sprite.Sprite):
 
 		def win(self,player):
 			self.gs.gameOver = True
-			self.gs.endGame = EndGame(player, self.gs)
 
 class Menu(pygame.sprite.Sprite):
 		def __init__(self,gs=None):
@@ -523,7 +522,19 @@ class GameSpace:
 				tracker.player2.transport.write(str(self.maxPts)+"|"+str(self.ceiling)+"|"+str(self.walls))
 
 		elif self.gameOver == True:
-			pass		
+			if self.p1.points >= self.maxPts:
+				tracker.player1.transport.write("win1")
+				tracker.player2.transport.write("win1")
+				self.p1.points=0
+				self.p2.points=0
+				self.gameOver = False
+			elif self.p2.points >= self.maxPts:
+				tracker.player1.transport.write("win2")
+				tracker.player2.transport.write("win2")
+				self.p1.points=0
+				self.p2.points=0
+				self.gameOver = False
+				
 
 tracker = Tracker()
 gs = GameSpace()

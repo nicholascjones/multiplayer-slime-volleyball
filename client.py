@@ -390,6 +390,7 @@ class Client(object):
 		self.connected = False
 		self.maxPts = 25
 		self.menu = Menu(self)
+		self.win = Win(self)
 
 		"""NEED TO UPDATE GRAVITY"""
 		self.g = 0.5
@@ -401,6 +402,10 @@ class Client(object):
 	def new_line(self, line):
 		# how each client updates the game from the server
 		self.line = line
+		if self.line == "win1":
+			self.win.win(1)
+		elif self.line == "win2":
+			self.win.win(2)
 		# determine what is being sent over the network
 		if self.connected == False and (self.line == str(1) or self.line == str(2) or self.line == "Server is full!"):
 			self.connected = True
