@@ -123,8 +123,8 @@ class Ball(pygame.sprite.Sprite):
 
 			#determines who "serves" based on winner
 			if winner == 1:
-				#self.x = random.randint(self.gs.width/8,(3*self.gs.width/8))
-				self.x = self.gs.width/4
+				self.x = random.randint(self.gs.width/8,(3*self.gs.width/8))
+				#self.x = self.gs.width/4
 			else: #if player 2 wins point
 				self.x = random.randint((5*self.gs.width/8),(7*self.gs.width/8))
 			#self.y = self.gs.height/2
