@@ -48,19 +48,15 @@ class Slime(pygame.sprite.Sprite):
 				self.rect.centerx = 3*self.gs.width/4 #player 2 values
 				self.rect.bottom = self.ground
 
-			self.mv =  15 # """ TEST VALUE #velocity used""" 
+			self.mv =  8 # """ TEST VALUE #velocity used""" 
 			self.vx = 0 #initial x velocity
 			self.vy = 0 #initial y velocity
 
 		def tick(self):
 
 			#movement series
-			
-			
 			if self.rect.bottom > self.ground:
 				self.rect.bottom = self.ground
-
-			
 
 			if self.rect.bottom < self.ground:
 				if pygame.sprite.collide_rect(self,self.gs.net):
@@ -100,8 +96,6 @@ class Slime(pygame.sprite.Sprite):
 			self.by = self.rect.bottom
 			self.bx = self.rect.centerx
 
-
-
 		def move(self,code):
 
 
@@ -113,7 +107,6 @@ class Slime(pygame.sprite.Sprite):
 				elif code == K_a:
 				#	self.rect = self.rect.move(-self.mv,0)
 					self.vx -= self.mv/2
-
 			else:
 				self.vx = self.gs.ball.vx
 
@@ -207,9 +200,9 @@ class Ball(pygame.sprite.Sprite):
 		def tick(self):
 
 			# collision detection series
-
 			#if collides with a player
 			if pygame.sprite.collide_rect(self,self.gs.p1):
+
 				self.bounce(1)
 			elif pygame.sprite.collide_rect(self,self.gs.p2):
 				self.bounce(2)
@@ -242,6 +235,7 @@ class Ball(pygame.sprite.Sprite):
 				self.gs.p2.points += 1
 				self.gs.ball = Ball(gs,2)
 
+
 class Net(pygame.sprite.Sprite):
 		def __init__(self,gs=None):
 			pygame.sprite.Sprite.__init__(self)
@@ -255,22 +249,22 @@ class Net(pygame.sprite.Sprite):
 			self.rect.centerx = self.gs.width/2
 			self.rect.bottom = self.gs.height
 
-
 class Win(pygame.sprite.Sprite):
 		def __init__(self,gs=None):
 			pygame.sprite.Sprite.__init__(self)
 			self.gs = gs
 
 		def tick(self):
-			if self.gs.p1.points == self.gs.maxPts:
+			if self.gs.p1.points >= self.gs.maxPts:
 				self.win(1)
-			elif self.gs.p2.points == self.gs.maxPts:
+			elif self.gs.p2.points >= self.gs.maxPts:
 				self.win(2)
 			else:
 				pass
 
 		def win(self,player):
-				self.gs.gameOver = True
+			self.gs.gameOver = True
+			self.gs.endGame = EndGame(player, self.gs)
 
 class Menu(pygame.sprite.Sprite):
 		def __init__(self,gs=None):
@@ -308,7 +302,7 @@ class Menu(pygame.sprite.Sprite):
 
 			if code == pygame.K_UP:
 				self.gs.maxPts += 1
-			else:
+			elif self.gs.maxPts > 1:
 				self.gs.maxPts -= 1
 
 		def toggleCeilings(self):
@@ -322,6 +316,30 @@ class Menu(pygame.sprite.Sprite):
 				self.gs.walls = False
 			else:
 				self.gs.walls = True
+
+class EndGame(pygame.sprite.Sprite):
+		def __init__(self,winner,gs=None):
+			pygame.sprite.Sprite.__init__(self)
+			self.gs = gs
+			if winner == 1:
+				self.image = pygame.image.load("redslime.png")
+				self.winMsg = "Congratulations, Player 1!"
+				self.loseMsg = "Player 2...better luck next time!"
+			else:
+				self.image = pygame.image.load("greenslime.png")
+				self.winMsg = "Congratulations, Player 2"
+				self.loseMsg = "Player 1...better luck next time!"
+
+			self.win2 = "YOU WIN!"
+
+			self.image = pygame.transform.scale(self.image, (200, 120))
+			self.rect = self.image.get_rect()
+			self.rect.center = (self.gs.width/2, (3*self.gs.height/4)+30)
+			self.rMsg = "To play a CHALLENGE GAME, press ENTER"
+			self.qMsg = "To quit, click or press the 'q' key."
+			self.gameOver = True
+			self.gs.p1.points=0
+			self.gs.p2.points=0
 
 class Server(Protocol):
 
@@ -373,7 +391,10 @@ class Server(Protocol):
 		self.gs.p2 = None
 		self.gs.ball = Ball(self.gs)
 		self.gs.menu.isMenu = True
-		self.gs.maxPts = 21
+		self.gs.enters = 0
+		self.gs.maxPts = 25
+		self.gs.ceiling = True
+		self.gs.walls = True
 		self.players.pop()
 
 	def dataReceived(self, data):
@@ -381,30 +402,29 @@ class Server(Protocol):
 			if data == str(99):
 				if self == tracker.player1:
 					self.gs.menu.toggleCeilings()
-					tracker.player2.transport.write("ceiling")
 					return
 			elif data == str(119):
 				if self == tracker.player1:
 					self.gs.menu.toggleWalls()
-					tracker.player2.transport.write("walls")
 					return
 			elif data == str(273):
 				if self == tracker.player1:
 					key = pygame.K_UP
 					self.gs.menu.changePoints(key)
-					tracker.player2.transport.write("up")
 					return
 			elif data == str(274):
 				if self == tracker.player1:
 					key = pygame.K_DOWN
 					self.gs.menu.changePoints(key)
-					tracker.player2.transport.write("down")
 					return
 			elif data == str(13):
 				self.gs.enters += 1
 				if self.gs.enters == 2:
 					self.gs.menu.isMenu = False
 				return
+		elif self.gs.gameOver == True:
+			if data == str(13):
+				self.gs.gameOver = False
 		else:
 			# determine what key the player's pressed
 			if data == str(100):
@@ -452,7 +472,7 @@ class GameSpace:
 
 		# game over flag
 		self.gameOver = False
-		self.maxPts = 21
+		self.maxPts = 25
 		self.enters = 0
 
 		#Physics Objects
@@ -477,7 +497,7 @@ class GameSpace:
 			self.p2 = Slime(self, 2)
 
 	def tick(self):
-		if self.menu.isMenu == False:
+		if self.menu.isMenu == False and self.gameOver == False:
 			# make sure there is a client
 			if self.p1 != None:
 				# update player 1
@@ -497,8 +517,13 @@ class GameSpace:
 				self.win.tick()
 				# send to player 2 the ball and player 1's info
 				tracker.player2.transport.write(str(self.p1.rect.centerx)+"|"+str(self.p1.rect.bottom)+"|"+str(self.ball.rect.centerx)+"|"+str(self.ball.rect.centery)+"|"+str(self.p1.points)+"|"+str(self.p2.points))
-		else:
+		elif self.menu.isMenu == True:
 			self.menu.tick()
+			if self.p2 != None and self.enters == 0:
+				tracker.player2.transport.write(str(self.maxPts)+"|"+str(self.ceiling)+"|"+str(self.walls))
+
+		elif self.gameOver == True:
+			pass		
 
 tracker = Tracker()
 gs = GameSpace()
