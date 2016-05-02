@@ -275,12 +275,18 @@ class Client(object):
 		if self.line == str(1) or self.line == str(2) or self.line == "Server is full!":
 			self.connectionMade()
 		else:
+			components = self.line.split("|")
+			x = components[0]
+			y = components[1]
+			bx = components[2]
+			by = components[3]
 			if self.e != None:
-				components = self.line.split("|")
-				x = components[0]
-				y = components[1]
 				self.e.rect.centerx = int(x)
 				self.e.rect.centery = int(y)
+			if self.ball != None:
+				self.ball.rect.centerx = int(bx)
+				self.ball.rect.centery = int(by)
+
 	def connectionMade(self):
 		if self.line == str(1) or self.line == str(2):
 			self.net = Net(self)

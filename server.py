@@ -324,10 +324,10 @@ class GameSpace:
 		if self.p1 != None:
 			self.p1.tick()
 			if self.p2 != None:
-				tracker.player1.transport.write(str(self.p2.rect.centerx)+"|"+str(self.p2.rect.centery))
+				tracker.player1.transport.write(str(self.p2.rect.centerx)+"|"+str(self.p2.rect.centery)+"|"+str(self.ball.rect.centerx)+"|"+str(self.ball.rect.centery))
 		if self.p2 != None:
 			self.p2.tick()
-			tracker.player2.transport.write(str(self.p1.rect.centerx)+"|"+str(self.p1.rect.centery))
+			tracker.player2.transport.write(str(self.p1.rect.centerx)+"|"+str(self.p1.rect.centery)+"|"+str(self.ball.rect.centerx)+"|"+str(self.ball.rect.centery))
 
 tracker = Tracker()
 gs = GameSpace()
