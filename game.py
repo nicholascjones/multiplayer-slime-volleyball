@@ -310,6 +310,8 @@ class Win(pygame.sprite.Sprite):
 		def win(self,player):
 				print "Player " + str(player) + " Wins!"
 				self.gs.gameOver = True
+				self.gs.endGame = EndGame(player,self.gs)
+
 
 
 class Menu(pygame.sprite.Sprite):
@@ -343,12 +345,11 @@ class Menu(pygame.sprite.Sprite):
 			self.l4 = "This game is being played to " + str(self.gs.maxPts) + " points,"
 
 
-
 		def changePoints(self,code):
 
 			if code == pygame.K_UP:
 				self.gs.maxPts += 1
-			else:
+			elif self.gs.maxPts > 1:
 				self.gs.maxPts -= 1
 
 		def toggleCeilings(self):
@@ -362,6 +363,29 @@ class Menu(pygame.sprite.Sprite):
 				self.gs.walls = False
 			else:
 				self.gs.walls = True
+
+
+class EndGame(pygame.sprite.Sprite):
+		def __init__(self,winner,gs=None):
+			pygame.sprite.Sprite.__init__(self)
+			self.gs = gs
+			if winner == 1:
+				self.image = pygame.image.load("redslime.png")
+				self.winMsg = "Congratulations, Player 1!"
+				self.loseMsg = "Player 2...better luck next time!"
+			else:
+				self.image = pygame.image.load("greenslime.png")
+				self.winMsg = "Congratulations, Player 2"
+				self.loseMsg = "Player 1...better luck next time!"
+
+			self.win2 = "YOU WIN!"
+
+			self.image = pygame.transform.scale(self.image,(200,120))
+			self.rect = self.image.get_rect()
+			self.rect.center = (self.gs.width/2,(3*self.gs.height/4)+30)
+			self.rMsg = "To play a CHALLENGE GAME, press ENTER"
+			self.gameOver = True
+
 
  
 class GameSpace:
@@ -383,6 +407,7 @@ class GameSpace:
 		self.ballG = 0.35
 		#game over flag
 		self.gameOver = False
+		self.quit = False
 
 
 
@@ -394,7 +419,7 @@ class GameSpace:
 		#flags to enable ceilings and walls
 		self.ceiling = True
 		self.walls = True
-		self.maxPts = 21
+		self.maxPts = 25
 
 
 
@@ -461,7 +486,7 @@ class GameSpace:
 
 
 		# 3) game loop
-		while self.gameOver == False:
+		while self.quit == False:
 			# 4) clock tick regulation
 			self.clock.tick(60)
 
@@ -507,6 +532,24 @@ class GameSpace:
 
 
 			pygame.display.flip()
+
+			while self.gameOver == True:
+
+
+
+
+				self.screen.fill(self.black)
+
+				self.screen.blit(self.endGame.image,self.endGame.rect)
+				self.screen.blit(pygame.font.SysFont('mono', 32, bold=True).render(str(self.endGame.winMsg), True, (255,255,255)), ((self.width/8),20))
+				self.screen.blit(pygame.font.SysFont('mono', 32, bold=True).render(str(self.endGame.win2), True, (255,255,255)), ((self.width/3),70))
+				self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.endGame.loseMsg), True, (150,150,255)), ((self.width/8),170))
+				self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.endGame.rMsg), True, (150,150,255)), ((self.width/8),220))
+
+				pygame.display.flip()
+
+
+
 
 if __name__ == '__main__':
 	gs = GameSpace()
