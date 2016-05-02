@@ -26,7 +26,7 @@ class Slime(pygame.sprite.Sprite):
 			self.gs = gs
 			self.pn = pn #player number
 
-			self.human = human
+			self.human = True
 
 			self.points = 0 #player number of points
 
@@ -144,6 +144,9 @@ class Ball(pygame.sprite.Sprite):
 				self.vx += math.cos(ang)*self.gs.p1.vx
 				self.vx += (int(rf*rs))
 
+				if abs(self.vx) < 1:
+					self.vx+=random.uniform(-1.5,1.5)
+
 				self.vy *= -0.9
 				self.vy -= math.cos(ang)*self.gs.p1.vy
 				self.rect = self.rect.move(self.vx,self.vy)
@@ -159,6 +162,9 @@ class Ball(pygame.sprite.Sprite):
 				self.vx = math.cos(ang) * -12.5 #self.gs.p1.vx
 				self.vx += math.cos(ang)*self.gs.p2.vx
 				self.vx += (int(rf*rs))
+
+				if abs(self.vx) < 1:
+					self.vx+=random.uniform(-1.5,1.5)
 
 				self.vy *= -0.9
 				self.vy -= math.cos(ang)*self.gs.p2.vy
@@ -338,15 +344,16 @@ class GameSpace:
 			self.p2 = Slime(self, 2)
 
 	def tick(self):
+		
 		# make sure there is a client
 		if self.p1 != None:
 			# update player 1
 			self.p1.tick()
 			if self.p2 != None:
 				# if there's a player 2, update
-				# player 1's info over the network to 
+				# player 1 info over the network about 
 				# player 2, as well as the ball
-				tracker.player1.transport.write(str(self.p2.rect.centerx)+"|"+str(self.p2.rect.bottom)+"|"+str(self.ball.rect.centerx)+"|"+str(self.ball.rect.centery))
+				tracker.player1.transport.write(str(self.p2.rect.centerx)+"|"+str(self.p2.rect.bottom)+"|"+str(self.ball.rect.centerx)+"|"+str(self.ball.rect.centery)+"|"+str(self.p1.points)+"|"+str(self.p2.points))
 		if self.p2 != None:
 			# update player 2
 			self.p2.tick()
@@ -355,7 +362,7 @@ class GameSpace:
 			# joining lobby
 			self.ball.tick()
 			# send to player 2 the ball and player 1's info
-			tracker.player2.transport.write(str(self.p1.rect.centerx)+"|"+str(self.p1.rect.bottom)+"|"+str(self.ball.rect.centerx)+"|"+str(self.ball.rect.centery))
+			tracker.player2.transport.write(str(self.p1.rect.centerx)+"|"+str(self.p1.rect.bottom)+"|"+str(self.ball.rect.centerx)+"|"+str(self.ball.rect.centery)+"|"+str(self.p1.points)+"|"+str(self.p2.points))
 
 
 tracker = Tracker()
