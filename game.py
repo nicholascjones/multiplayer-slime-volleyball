@@ -155,7 +155,10 @@ class Ball(pygame.sprite.Sprite):
 			else: #if player 2 wins point
 				self.x = random.randint((5*self.gs.width/8),(7*self.gs.width/8))
 			#self.y = self.gs.height/2
-			self.y = 0
+			if self.gs.challenge == False:
+				self.y = 0
+			else:
+				self.y = self.gs.height/4 + 20
 			self.vx = 0
 			self.vy = 0
 			self.rect.center = (self.x,self.y)
@@ -250,6 +253,10 @@ class Ball(pygame.sprite.Sprite):
 			elif ( (self.rect.left <= 0 or self.rect.right >= self.gs.width) and self.gs.walls == True):
 				print "bounced off wall"
 				self.bounce(5)
+			elif self.gs.challenge == True:
+				if pygame.sprite.collide_rect(self,self.gs.ceiling):
+					print "bounced off new ceiling"
+					self.bounce(4)
 
 			#if hits ground
 			if self.rect.bottom < self.gs.height-10:
@@ -289,7 +296,7 @@ class Net(pygame.sprite.Sprite):
 			if self.gs.challenge == False:
 				self.image = pygame.transform.scale(self.image,(self.NetScale/10,self.NetScale))
 			else:
-				self.image = pygame.transform.scale(self.image,(self.NetScale/10,2*self.NetScale))
+				self.image = pygame.transform.scale(self.image,(self.NetScale/10,int(1.5*self.NetScale)))
 			self.rect = self.image.get_rect()
 			self.rect.centerx = self.gs.width/2
 			self.rect.bottom = self.gs.height
@@ -372,7 +379,8 @@ class EndGame(pygame.sprite.Sprite):
 		def __init__(self,winner,gs=None):
 			pygame.sprite.Sprite.__init__(self)
 			self.gs = gs
-			if winner == 1:
+			self.winner = winner
+			if self.winner == 1:
 				self.image = pygame.image.load("redslime.png")
 				self.winMsg = "Congratulations, Player 1!"
 				self.loseMsg = "Player 2...better luck next time!"
@@ -392,6 +400,20 @@ class EndGame(pygame.sprite.Sprite):
 
 			self.gs.p1.points = 0
 			self.gs.p2.points = 0
+
+
+class Ceiling(pygame.sprite.Sprite):
+		def __init__(self,gs=None):
+			pygame.sprite.Sprite.__init__(self)
+			self.gs = gs
+			self.CeilScale = 1000
+			self.image = pygame.image.load("ceiling.png")
+			self.image = pygame.transform.scale(self.image,(self.CeilScale,10))
+			self.rect = self.image.get_rect()
+			self.rect.centerx = self.gs.width/2
+			self.rect.centery = self.gs.height/4
+
+			print "net topleft = " + str(self.rect.topleft)
 
 
  
@@ -530,6 +552,9 @@ class GameSpace:
 
 			self.screen.blit(self.net.image, self.net.rect)
 
+			if self.challenge == True:
+				self.screen.blit(self.ceiling.image, self.ceiling.rect)
+
 			#displaying red slime score
 			self.screen.blit(pygame.font.SysFont('mono', 36, bold=True).render(str(self.p1.points), True, (252,13,27)), ((self.width/4),20))
 
@@ -548,9 +573,7 @@ class GameSpace:
 
 					if event.type == KEYDOWN:
 						if event.key == pygame.K_RETURN:
-							self.gameOver = False
-							self.challenge = True
-							self.net = Net(self)
+							self.startChallenge()
 						elif event.key == pygame.K_q:
 							sys.exit()
 						else:
@@ -572,6 +595,13 @@ class GameSpace:
 				self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.endGame.qMsg), True, (150,150,255)), ((self.width/8),270))
 
 				pygame.display.flip()
+
+	def startChallenge(self):
+		self.gameOver = False
+		self.challenge = True
+		self.net = Net(self)
+		self.ceiling = Ceiling(self)
+		self.ball = Ball(self,self.endGame.winner)
 
 
 
