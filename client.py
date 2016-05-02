@@ -279,6 +279,57 @@ class Net(pygame.sprite.Sprite):
 			self.rect.centerx = self.gs.width/2
 			self.rect.bottom = self.gs.height
 
+class Menu(pygame.sprite.Sprite):
+		def __init__(self,gs=None):
+			pygame.sprite.Sprite.__init__(self)
+			self.gs = gs
+			self.image = pygame.image.load("redslime.png")
+			self.image = pygame.transform.scale(self.image,(200,120))
+			self.rect = self.image.get_rect()
+			self.rect.center = (self.gs.width/2,(3*self.gs.height/4)+30)
+			self.isMenu = True
+
+			self.l2 = "Ceilings are ON. Press 'c' to toggle." 
+			self.l3 = "Walls are ON. Press 'w' to toggle."
+			self.l4 = "This game is being played to " + str(self.gs.maxPts) + " points,"
+			self.l6 = "press the up or down arrows to change."
+			self.l5 = "Press ENTER to start!"
+
+		def tick(self):
+
+			if self.gs.ceiling == True:
+				self.l2 = "Ceilings are ON. Press 'c' to toggle." 
+			else:
+				self.l2 = "Ceilings are OFF. Press 'c' to toggle." 
+
+			if self.gs.walls == True:
+				self.l3 = "Walls are ON. Press 'w' to toggle."
+			else:
+				self.l3 = "Walls are OFF. Press 'w' to toggle."
+
+			self.l4 = "This game is being played to " + str(self.gs.maxPts) + " points,"
+
+
+
+		def changePoints(self,code):
+
+			if code == pygame.K_UP:
+				self.gs.maxPts += 1
+			else:
+				self.gs.maxPts -= 1
+
+		def toggleCeilings(self):
+			if self.gs.ceiling == True:
+				self.gs.ceiling = False
+			else:
+				self.gs.ceiling = True
+
+		def toggleWalls(self):
+			if self.gs.walls == True:
+				self.gs.walls = False
+			else:
+				self.gs.walls = True
+
 class Client(object):
 
 	def __init__(self):
@@ -295,6 +346,8 @@ class Client(object):
 		self.e = None
 		self.ball = None
 		self.connected = False
+		self.maxPts = 21
+		self.menu = Menu(self)
 
 		"""NEED TO UPDATE GRAVITY"""
 		self.g = 0.5
@@ -310,11 +363,8 @@ class Client(object):
 		if self.connected == False and (self.line == str(1) or self.line == str(2) or self.line == "Server is full!"):
 			self.connected = True
 			self.connectionMade()
-		elif self.line == "Point":
-			self.p.points += 1
-		elif self.line == "Boo":
-			self.e.points += 1
-		else:
+			return
+		if self.menu.isMenu == False:
 			# separate the string for data processing
 			components = self.line.split("|")
 			x = components[0]
@@ -331,6 +381,15 @@ class Client(object):
 			if self.ball != None:
 				self.ball.rect.centerx = int(bx)
 				self.ball.rect.centery = int(by)
+		else:
+			if self.line == "ceiling":
+				self.menu.toggleCeilings()
+			elif self.line == "walls":
+				self.menu.toggleWalls()
+			elif self.line == "up":
+				self.menu.changePoints(K_UP)
+			elif self.line == "down":
+				self.menu.changePoints(K_DOWN)
 
 	def connectionMade(self):
 		# determine which player the client is
@@ -351,38 +410,73 @@ class Client(object):
 		# update the screen info and obtain user input
 		if c.exit == True:
 			reactor.stop()
-		for event in pygame.event.get():
-			if event.type == QUIT:
-				reactor.stop()
-			elif event.type == KEYDOWN:
-				if event.key == pygame.K_q:
+		if self.menu.isMenu == True:
+			for event in pygame.event.get():
+				if event.type == QUIT:
 					reactor.stop()
-				elif (event.key == pygame.K_a or event.key == pygame.K_d):
-					self.protocol.transport.write(str(event.key))
-					self.p.move(event.key)
-				elif event.key == pygame.K_SPACE:
-					self.protocol.transport.write(str(event.key))
-					self.p.jump()	
+				elif event.type == KEYDOWN:
+					if event.key == pygame.K_q:
+						reactor.stop()
+					elif (event.key == pygame.K_UP or event.key == pygame.K_DOWN):
+						if self.value == 1:
+							self.menu.changePoints(event.key)
+							self.protocol.transport.write(str(event.key))
+					elif event.key == pygame.K_c:
+						if self.value == 1:
+							self.menu.toggleCeilings()
+							self.protocol.transport.write(str(event.key))
+					elif event.key == pygame.K_w:
+						if self.value == 1:
+							self.menu.toggleWalls()
+							self.protocol.transport.write(str(event.key))
+					elif event.key == pygame.K_RETURN:
+						self.menu.isMenu = False
+						self.protocol.transport.write(str(event.key))
 
-		# only tick oneself
-		if self.p != None:
-			self.p.tick()
+			self.menu.tick()
+			self.screen.fill(self.black)
+			self.screen.blit(self.menu.image, self.menu.rect)
+			self.screen.blit(pygame.font.SysFont('mono', 36, bold=True).render(str(self.title), True, (255,255,255)), ((self.width/4),20))
+			self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.menu.l2), True, (150,150,255)), ((self.width/8),70))
+			self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.menu.l3), True, (150,150,255)), ((self.width/8),120))
+			self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.menu.l4), True, (150,150,255)), ((self.width/8),170))
+			self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.menu.l6), True, (150,150,255)), ((self.width/8),220))
+			self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.menu.l5), True, (150,150,255)), ((self.width/8),270))
 
-		self.screen.fill(self.black)
-		if self.p != None:
-			self.screen.blit(self.p.image, self.p.rect)
-			self.screen.blit(self.e.image, self.e.rect)
-			self.screen.blit(self.ball.image, self.ball.rect)
-			self.screen.blit(self.net.image, self.net.rect)
-			# red score
-			self.screen.blit(pygame.font.SysFont('mono', 36, bold=True).render(str(self.p.points), True, (252,13,27)), ((self.width/4),20))
-			# green score
-			self.screen.blit(pygame.font.SysFont('mono', 36, bold=True).render(str(self.e.points), True, (42,253,52)), ((3*self.width/4),20))
+			pygame.display.flip()
+		else:
+			for event in pygame.event.get():
+				if event.type == QUIT:
+					reactor.stop()
+				elif event.type == KEYDOWN:
+					if event.key == pygame.K_q:
+						reactor.stop()
+					elif (event.key == pygame.K_a or event.key == pygame.K_d):
+						self.protocol.transport.write(str(event.key))
+						self.p.move(event.key)
+					elif event.key == pygame.K_SPACE:
+						self.protocol.transport.write(str(event.key))
+						self.p.jump()	
 
-			# title
-			self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.title), True, (255,255,255)), ((5*self.width/16)+15,20))
+			# only tick oneself
+			if self.p != None:
+				self.p.tick()
 
-		pygame.display.flip()
+			self.screen.fill(self.black)
+			if self.p != None:
+				self.screen.blit(self.p.image, self.p.rect)
+				self.screen.blit(self.e.image, self.e.rect)
+				self.screen.blit(self.ball.image, self.ball.rect)
+				self.screen.blit(self.net.image, self.net.rect)
+				# red score
+				self.screen.blit(pygame.font.SysFont('mono', 36, bold=True).render(str(self.p.points), True, (252,13,27)), ((self.width/4),20))
+				# green score
+				self.screen.blit(pygame.font.SysFont('mono', 36, bold=True).render(str(self.e.points), True, (42,253,52)), ((3*self.width/4),20))
+
+				# title
+				self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.title), True, (255,255,255)), ((5*self.width/16)+15,20))
+
+			pygame.display.flip()
 
 c = Client()
 

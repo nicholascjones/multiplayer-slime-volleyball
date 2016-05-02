@@ -272,6 +272,57 @@ class Win(pygame.sprite.Sprite):
 		def win(self,player):
 				self.gs.gameOver = True
 
+class Menu(pygame.sprite.Sprite):
+		def __init__(self,gs=None):
+			pygame.sprite.Sprite.__init__(self)
+			self.gs = gs
+			self.image = pygame.image.load("redslime.png")
+			self.image = pygame.transform.scale(self.image,(200,120))
+			self.rect = self.image.get_rect()
+			self.rect.center = (self.gs.width/2,(3*self.gs.height/4)+30)
+			self.isMenu = True
+
+			self.l2 = "Ceilings are ON. Press 'c' to toggle." 
+			self.l3 = "Walls are ON. Press 'w' to toggle."
+			self.l4 = "This game is being played to " + str(self.gs.maxPts) + " points,"
+			self.l6 = "press the up or down arrows to change."
+			self.l5 = "Press ENTER to start!"
+
+		def tick(self):
+
+			if self.gs.ceiling == True:
+				self.l2 = "Ceilings are ON. Press 'c' to toggle." 
+			else:
+				self.l2 = "Ceilings are OFF. Press 'c' to toggle." 
+
+			if self.gs.walls == True:
+				self.l3 = "Walls are ON. Press 'w' to toggle."
+			else:
+				self.l3 = "Walls are OFF. Press 'w' to toggle."
+
+			self.l4 = "This game is being played to " + str(self.gs.maxPts) + " points,"
+
+
+
+		def changePoints(self,code):
+
+			if code == pygame.K_UP:
+				self.gs.maxPts += 1
+			else:
+				self.gs.maxPts -= 1
+
+		def toggleCeilings(self):
+			if self.gs.ceiling == True:
+				self.gs.ceiling = False
+			else:
+				self.gs.ceiling = True
+
+		def toggleWalls(self):
+			if self.gs.walls == True:
+				self.gs.walls = False
+			else:
+				self.gs.walls = True
+
 class Server(Protocol):
 
 	def __init__(self, players, addr):
@@ -320,27 +371,61 @@ class Server(Protocol):
 		# reset game state
 		self.gs.p1 = None
 		self.gs.p2 = None
+		self.gs.ball = Ball(self.gs)
+		self.gs.menu.isMenu = True
+		self.gs.maxPts = 21
 		self.players.pop()
 
 	def dataReceived(self, data):
-		# determine what key the player's pressed
-		if data == str(100):
-			key = pygame.K_d
-		elif data == str(97):
-			key = pygame.K_a
-		# if space bar, call jump instead of move
-		elif data == str(32):
+		if self.gs.menu.isMenu == True:
+			if data == str(99):
+				if self == tracker.player1:
+					self.gs.menu.toggleCeilings()
+					tracker.player2.transport.write("ceiling")
+					return
+			elif data == str(119):
+				if self == tracker.player1:
+					self.gs.menu.toggleWalls()
+					tracker.player2.transport.write("walls")
+					return
+			elif data == str(273):
+				if self == tracker.player1:
+					key = pygame.K_UP
+					self.gs.menu.changePoints(key)
+					tracker.player2.transport.write("up")
+					return
+			elif data == str(274):
+				if self == tracker.player1:
+					key = pygame.K_DOWN
+					self.gs.menu.changePoints(key)
+					tracker.player2.transport.write("down")
+					return
+			elif data == str(13):
+				self.gs.enters += 1
+				if self.gs.enters == 2:
+					self.gs.menu.isMenu = False
+				return
+		else:
+			# determine what key the player's pressed
+			if data == str(100):
+				key = pygame.K_d
+			elif data == str(97):
+				key = pygame.K_a
+			# if space bar, call jump instead of move
+			elif data == str(32):
+				if self == tracker.player1:
+					self.gs.p1.jump()
+					return
+				if self == tracker.player2:
+					self.gs.p2.jump()
+					return
+			else:
+				return
+			# send the specified key to the game state
 			if self == tracker.player1:
-				self.gs.p1.jump()
-				return
-			if self == tracker.player2:
-				self.gs.p2.jump()
-				return
-		# send the specified key to the game state
-		if self == tracker.player1:
-			self.gs.p1.move(key)
-		elif self == tracker.player2:
-			self.gs.p2.move(key)
+				self.gs.p1.move(key)
+			elif self == tracker.player2:
+				self.gs.p2.move(key)
 
 class ServerFactory(Factory):
 	# basic Twisted factory
@@ -368,6 +453,7 @@ class GameSpace:
 		# game over flag
 		self.gameOver = False
 		self.maxPts = 21
+		self.enters = 0
 
 		#Physics Objects
 		"""NEED TO UPDATE GRAVITY"""
@@ -382,6 +468,7 @@ class GameSpace:
 		self.win = Win(self)
 		self.ceiling = True
 		self.walls = True
+		self.menu = Menu(self)
 
 	def addplayer(self, player):
 		if player == 1:
@@ -390,27 +477,28 @@ class GameSpace:
 			self.p2 = Slime(self, 2)
 
 	def tick(self):
-		
-		# make sure there is a client
-		if self.p1 != None:
-			# update player 1
-			self.p1.tick()
+		if self.menu.isMenu == False:
+			# make sure there is a client
+			if self.p1 != None:
+				# update player 1
+				self.p1.tick()
+				if self.p2 != None:
+					# if there's a player 2, update
+					# player 1 info over the network about 
+					# player 2, as well as the ball
+					tracker.player1.transport.write(str(self.p2.rect.centerx)+"|"+str(self.p2.rect.bottom)+"|"+str(self.ball.rect.centerx)+"|"+str(self.ball.rect.centery)+"|"+str(self.p1.points)+"|"+str(self.p2.points))
 			if self.p2 != None:
-				# if there's a player 2, update
-				# player 1 info over the network about 
-				# player 2, as well as the ball
-				tracker.player1.transport.write(str(self.p2.rect.centerx)+"|"+str(self.p2.rect.bottom)+"|"+str(self.ball.rect.centerx)+"|"+str(self.ball.rect.centery)+"|"+str(self.p1.points)+"|"+str(self.p2.points))
-		if self.p2 != None:
-			# update player 2
-			self.p2.tick()
-			# game does not start until two players join,
-			# therefore, start ball movement on player 2
-			# joining lobby
-			self.ball.tick()
-			self.win.tick()
-			# send to player 2 the ball and player 1's info
-			tracker.player2.transport.write(str(self.p1.rect.centerx)+"|"+str(self.p1.rect.bottom)+"|"+str(self.ball.rect.centerx)+"|"+str(self.ball.rect.centery)+"|"+str(self.p1.points)+"|"+str(self.p2.points))
-
+				# update player 2
+				self.p2.tick()
+				# game does not start until two players join,
+				# therefore, start ball movement on player 2
+				# joining lobby
+				self.ball.tick()
+				self.win.tick()
+				# send to player 2 the ball and player 1's info
+				tracker.player2.transport.write(str(self.p1.rect.centerx)+"|"+str(self.p1.rect.bottom)+"|"+str(self.ball.rect.centerx)+"|"+str(self.ball.rect.centery)+"|"+str(self.p1.points)+"|"+str(self.p2.points))
+		else:
+			self.menu.tick()
 
 tracker = Tracker()
 gs = GameSpace()
