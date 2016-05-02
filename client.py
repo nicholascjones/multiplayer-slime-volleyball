@@ -52,7 +52,7 @@ class Slime(pygame.sprite.Sprite):
 			self.gs = gs
 			self.pn = pn #player number
 
-			self.human = human
+			self.human = True
 
 			self.points = 0 #player number of points
 
@@ -170,6 +170,9 @@ class Ball(pygame.sprite.Sprite):
 				self.vx += math.cos(ang)*self.gs.p.vx
 				self.vx += (int(rf*rs))
 
+				if abs(self.vx) < 1:
+					self.vx+=random.uniform(-1.5,1.5)
+
 				self.vy *= -0.9
 				self.vy -= math.cos(ang)*self.gs.p.vy
 				self.rect = self.rect.move(self.vx,self.vy)
@@ -185,6 +188,9 @@ class Ball(pygame.sprite.Sprite):
 				self.vx = math.cos(ang) * -12.5 #self.gs.p1.vx
 				self.vx += math.cos(ang)*self.gs.e.vx
 				self.vx += (int(rf*rs))
+
+				if abs(self.vx) < 1:
+					self.vx+=random.uniform(-1.5,1.5)
 
 				self.vy *= -0.9
 				self.vy -= math.cos(ang)*self.gs.e.vy
@@ -262,6 +268,7 @@ class Client(object):
 		self.size = self.width, self.height = 640, 480
 		self.screen = pygame.display.set_mode(self.size)
 		self.black = 100, 100, 100
+		self.title = "Slime Volleyball"
 		self.p = None
 		self.e = None
 		self.ball = None
@@ -281,6 +288,10 @@ class Client(object):
 		if self.connected == False and (self.line == str(1) or self.line == str(2) or self.line == "Server is full!"):
 			self.connected = True
 			self.connectionMade()
+		elif self.line == "Point":
+			self.p.points += 1
+		elif self.line == "Boo":
+			self.e.points += 1
 		else:
 			# separate the string for data processing
 			components = self.line.split("|")
@@ -288,9 +299,13 @@ class Client(object):
 			y = components[1]
 			bx = components[2]
 			by = components[3]
+			ppoints = components[4]
+			epoints = components[5]
 			if self.e != None:
 				self.e.rect.centerx = int(x)
 				self.e.rect.bottom = int(y)
+				self.p.points = ppoints
+				self.e.points = epoints
 			if self.ball != None:
 				self.ball.rect.centerx = int(bx)
 				self.ball.rect.centery = int(by)
@@ -337,6 +352,13 @@ class Client(object):
 			self.screen.blit(self.e.image, self.e.rect)
 			self.screen.blit(self.ball.image, self.ball.rect)
 			self.screen.blit(self.net.image, self.net.rect)
+			# red score
+			self.screen.blit(pygame.font.SysFont('mono', 36, bold=True).render(str(self.p.points), True, (252,13,27)), ((self.width/4),20))
+			# green score
+			self.screen.blit(pygame.font.SysFont('mono', 36, bold=True).render(str(self.e.points), True, (42,253,52)), ((3*self.width/4),20))
+
+			# title
+			self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.title), True, (255,255,255)), ((5*self.width/16)+15,20))
 
 		pygame.display.flip()
 
