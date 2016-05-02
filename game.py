@@ -67,14 +67,14 @@ class Slime(pygame.sprite.Sprite):
 						self.vx = -1
 					elif self.pn == 2:
 						self.vx = 1
-					elif self.rect.left <= 0:
-						self.vx = 2
-					elif self.rect.right >= self.gs.width:
-						self.vx = -2
-					elif self.vx >= 1:
-						self.vx -= 1
-					elif self.vx <= -1:
-						self.vx += 1
+				elif self.rect.left <= 0:
+					self.vx = 2
+				elif self.rect.right >= self.gs.width:
+					self.vx = -2
+				elif self.vx >= 1:
+					self.vx -= 1
+				elif self.vx <= -1:
+					self.vx += 1
 				self.vy += self.gs.g
 				self.rect = self.rect.move(self.vx,self.vy)
 				print "not ground tick"
