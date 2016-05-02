@@ -273,14 +273,15 @@ class Win(pygame.sprite.Sprite):
 
 		def tick(self):
 			if self.gs.p1.points == 10:
-				print "P1 Wins!"
-
-				self.gs.gameOver = True
+				self.win(1)
 			elif self.gs.p2.points == 10:
-				print "P2 Wins!"
-				self.gs.gameOver = True
+				self.win(2)
 			else:
 				pass
+
+		def win(self,player):
+				print "Player " + str(player) + " Wins!"
+				self.gs.gameOver = True
 
 
 
