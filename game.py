@@ -384,7 +384,11 @@ class EndGame(pygame.sprite.Sprite):
 			self.rect = self.image.get_rect()
 			self.rect.center = (self.gs.width/2,(3*self.gs.height/4)+30)
 			self.rMsg = "To play a CHALLENGE GAME, press ENTER"
+			self.qMsg = "To quit, click or press the 'q' key."
 			self.gameOver = True
+
+			self.gs.p1.points = 0
+			self.gs.p2.points = 0
 
 
  
@@ -536,6 +540,21 @@ class GameSpace:
 			while self.gameOver == True:
 
 
+				for event in pygame.event.get():
+
+					if event.type == KEYDOWN:
+						if event.key == pygame.K_RETURN:
+							self.gameOver = False
+						elif event.key == pygame.K_q:
+							self.gameOver = False
+							self.quit = True
+						else:
+							pass
+					elif event.type == MOUSEBUTTONDOWN:
+						self.gameOver = False
+						self.quit = True
+					else:
+						pass
 
 
 				self.screen.fill(self.black)
@@ -545,6 +564,7 @@ class GameSpace:
 				self.screen.blit(pygame.font.SysFont('mono', 32, bold=True).render(str(self.endGame.win2), True, (255,255,255)), ((self.width/3),70))
 				self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.endGame.loseMsg), True, (150,150,255)), ((self.width/8),170))
 				self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.endGame.rMsg), True, (150,150,255)), ((self.width/8),220))
+				self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.endGame.qMsg), True, (150,150,255)), ((self.width/8),270))
 
 				pygame.display.flip()
 
