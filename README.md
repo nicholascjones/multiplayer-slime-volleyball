@@ -10,6 +10,5 @@ TODO:
 
 - Fix jumping
 - Player motion
-- Display score
 - ask about single/multiplayer?
 - ask about customizations?
