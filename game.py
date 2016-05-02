@@ -319,16 +319,30 @@ class Menu(pygame.sprite.Sprite):
 			self.image = pygame.image.load("redslime.png")
 			self.image = pygame.transform.scale(self.image,(200,120))
 			self.rect = self.image.get_rect()
-			self.rect.center = (self.gs.width/2,3*self.gs.height/4)
+			self.rect.center = (self.gs.width/2,(3*self.gs.height/4)+30)
 			self.isMenu = True
 
 			self.l2 = "Ceilings are ON. Press 'c' to toggle." 
 			self.l3 = "Walls are ON. Press 'w' to toggle."
-			self.l4 = "This game is being played to " + str(self.gs.maxPts) + " points. Press the up or down arrows to change."
+			self.l4 = "This game is being played to " + str(self.gs.maxPts) + " points,"
+			self.l6 = "press the up or down arrows to change."
 			self.l5 = "Press ENTER to start!"
 
 		def tick(self):
-			pass
+
+			if self.gs.ceiling == True:
+				self.l2 = "Ceilings are ON. Press 'c' to toggle." 
+			else:
+				self.l2 = "Ceilings are OFF. Press 'c' to toggle." 
+
+			if self.gs.walls == True:
+				self.l3 = "Walls are ON. Press 'w' to toggle."
+			else:
+				self.l3 = "Walls are OFF. Press 'w' to toggle."
+
+			self.l4 = "This game is being played to " + str(self.gs.maxPts) + " points,"
+
+
 
 		def changePoints(self,code):
 
@@ -404,6 +418,12 @@ class GameSpace:
 						self.menu.toggleCeilings()
 					elif event.key == pygame.K_w:
 						self.menu.toggleWalls()
+					elif event.key == pygame.K_RETURN:
+						self.menu.isMenu = False
+					else:
+						pass
+				else:
+					pass
 
 
 			self.menu.tick()
@@ -412,11 +432,11 @@ class GameSpace:
 
 			self.screen.blit(self.menu.image,self.menu.rect)
 			self.screen.blit(pygame.font.SysFont('mono', 36, bold=True).render(str(self.title), True, (255,255,255)), ((self.width/4),20))
-			self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.menu.l2), True, (255,255,255)), ((self.width/8),70))
-			self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.menu.l3), True, (255,255,255)), ((self.width/8),120))
-			self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.menu.l4), True, (255,255,255)), ((self.width/8),160))
-			self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.menu.l5), True, (255,255,255)), ((self.width/8),210))
-
+			self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.menu.l2), True, (150,150,255)), ((self.width/8),70))
+			self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.menu.l3), True, (150,150,255)), ((self.width/8),120))
+			self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.menu.l4), True, (150,150,255)), ((self.width/8),170))
+			self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.menu.l6), True, (150,150,255)), ((self.width/8),220))
+			self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.menu.l5), True, (150,150,255)), ((self.width/8),270))
 
 			pygame.display.flip()
 
