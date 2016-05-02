@@ -199,7 +199,7 @@ class Ball(pygame.sprite.Sprite):
 
 			#if hits ground
 			if self.rect.bottom < self.gs.height-10:
-				self.vy += self.gs.g
+				self.vy += self.gs.ballG
 				self.rect = self.rect.move(self.vx,self.vy)
 
 			else:
@@ -307,6 +307,7 @@ class GameSpace:
 		#Physics Objects
 		"""NEED TO UPDATE GRAVITY"""
 		self.g = 0.5
+		self.ballG = 0.35
 
 		# set up game objects
 		self.p1 = None

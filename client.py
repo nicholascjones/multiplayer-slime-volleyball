@@ -223,7 +223,7 @@ class Ball(pygame.sprite.Sprite):
 
 			#if hits ground
 			if self.rect.bottom < self.gs.height-10:
-				self.vy += self.gs.g
+				self.vy += self.gs.ballG
 				self.rect = self.rect.move(self.vx,self.vy)
 
 			else:
@@ -266,6 +266,7 @@ class Client(object):
 
 		"""NEED TO UPDATE GRAVITY"""
 		self.g = 0.5
+		self.ballG = 0.35
 
 		self.ceiling = True
 		self.walls = True
@@ -321,8 +322,6 @@ class Client(object):
 			self.p.tick()
 		if self.e != None:
 			self.e.tick()
-		if self.ball != None:
-			self.ball.tick()
 
 		self.screen.fill(self.black)
 		if self.p != None:
