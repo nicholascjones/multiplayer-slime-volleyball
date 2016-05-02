@@ -18,7 +18,7 @@ class Slime(pygame.sprite.Sprite):
 			self.gs = gs
 			self.pn = pn #player number
 
-			self.human = human
+			self.human = True
 
 			self.points = 0 #player number of points
 
@@ -162,6 +162,9 @@ class Ball(pygame.sprite.Sprite):
 				self.vx += math.cos(ang)*self.gs.p1.vx
 				self.vx += (int(rf*rs))
 
+				if abs(self.vx) < 1:
+					self.vx+=random.uniform(-1.5,1.5)
+
 				self.vy *= -0.9
 				self.vy -= math.cos(ang)*self.gs.p1.vy
 				self.rect = self.rect.move(self.vx,self.vy)
@@ -177,6 +180,9 @@ class Ball(pygame.sprite.Sprite):
 				self.vx = math.cos(ang) * -12.5 #self.gs.p1.vx
 				self.vx += math.cos(ang)*self.gs.p2.vx
 				self.vx += (int(rf*rs))
+
+				if abs(self.vx) < 1:
+					self.vx+=random.uniform(-1.5,1.5)
 
 				self.vy *= -0.9
 				self.vy -= math.cos(ang)*self.gs.p2.vy
@@ -212,6 +218,7 @@ class Ball(pygame.sprite.Sprite):
 			# collision detection series
 
 			print "VY = " + str(self.vy)
+			print "VX = " + str(self.vx)
 
 			#if collides with a player
 			if pygame.sprite.collide_rect(self,self.gs.p1):
@@ -294,8 +301,10 @@ class GameSpace:
 
 		# General Game Variables
 		self.size = self.width, self.height = 640, 480
-		self.black = 0, 0, 0
+		self.black = 100, 100, 100 #gray background preferable
 		self.count = 0
+
+		self.title = "Slime Volleyball"
 
 		#game over flag
 		self.gameOver = False
@@ -349,12 +358,6 @@ class GameSpace:
 
 					if event.key == pygame.K_UP:
 						self.p1.jump()
-				elif event.type == MOUSEBUTTONUP and self.count == 0:
-					self.black = 100, 100, 100
-					self.count += 1
-				elif event.type == MOUSEBUTTONUP and self.count == 1:
-					self.black = 0, 0, 0
-					self.count -= 1
 
 			# 6) tick game objects
 
@@ -377,7 +380,14 @@ class GameSpace:
 
 			self.screen.blit(self.net.image, self.net.rect)
 
-		#	pygame.draw.rect
+			#displaying red slime score
+			self.screen.blit(pygame.font.SysFont('mono', 36, bold=True).render(str(self.p1.points), True, (252,13,27)), ((self.width/4),20))
+
+			#displaying green slime score
+			self.screen.blit(pygame.font.SysFont('mono', 36, bold=True).render(str(self.p2.points), True, (42,253,52)), ((3*self.width/4),20))
+
+			self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.title), True, (255,255,255)), ((5*self.width/16)+15,20))
+
 
 			pygame.display.flip()
 
