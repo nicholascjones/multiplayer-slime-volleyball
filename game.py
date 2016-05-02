@@ -11,14 +11,12 @@ import random
 from pygame.locals import *
 	
 class Slime(pygame.sprite.Sprite):
-		def __init__(self, gs=None,pn=1,human=True):
+		def __init__(self, gs=None,pn=1):
 			pygame.sprite.Sprite.__init__(self)
 
 			# Member Variable Initialization
 			self.gs = gs
 			self.pn = pn #player number
-
-			self.human = True
 
 			self.points = 0 #player number of points
 
@@ -50,16 +48,10 @@ class Slime(pygame.sprite.Sprite):
 
 		def tick(self):
 
-			#movement series
-			
-			
-			print "BOTTOM LOCATION = " + str(self.rect.bottom)
-			print "GROUND LOCATION = " + str(self.ground)
-			if self.rect.bottom > self.ground:
-				print "uhhh"
-				self.rect.bottom = self.ground
+			#movement series	
 
-			
+			if self.rect.bottom > self.ground:
+				self.rect.bottom = self.ground		
 
 			if self.rect.bottom < self.ground:
 				if pygame.sprite.collide_rect(self,self.gs.net):
@@ -77,8 +69,6 @@ class Slime(pygame.sprite.Sprite):
 					self.vx += 1
 				self.vy += self.gs.g
 				self.rect = self.rect.move(self.vx,self.vy)
-				print "not ground tick"
-				print "ground tick"
 			
 			else:
 				if pygame.sprite.collide_rect(self,self.gs.net):
@@ -103,42 +93,23 @@ class Slime(pygame.sprite.Sprite):
 			self.by = self.rect.bottom
 			self.bx = self.rect.centerx
 
-
-			print "BOTTOM CENTER COORDINATES:"
-			print "bottom = " + str(self.by)
-			print "center = " + str(self.bx)
-
 		def move(self,code):
 
 
-			if self.human == True:
-				print "MOVING!!"
-
-				print self.rect.topleft
-
-				if code == K_RIGHT:
-				#	self.rect = self.rect.move(self.mv,0)
-					self.vx += self.mv/2
-				elif code == K_LEFT:
-				#	self.rect = self.rect.move(-self.mv,0)
-					self.vx -= self.mv/2
-				else:
-					print "invalid movement"
-
+			if code == K_RIGHT:
+			#	self.rect = self.rect.move(self.mv,0)
+				self.vx += self.mv/2
+			elif code == K_LEFT:
+			#	self.rect = self.rect.move(-self.mv,0)
+				self.vx -= self.mv/2
 			else:
-				self.vx = self.gs.ball.vx
+				pass
 
 		def jump(self):
 
-			print "TRUTH = " + str(self.rect.bottom <= self.ground)
-
 			if (self.rect.bottom <= self.ground) and (self.rect.bottom > self.ground-5):
-				print "jump on it!"
 				self.vy -= 7
 				self.rect = self.rect.move(0,self.vy)
-			else:
-				print "no double jumping!"
-
 
 
 class Ball(pygame.sprite.Sprite):
@@ -152,7 +123,8 @@ class Ball(pygame.sprite.Sprite):
 
 			#determines who "serves" based on winner
 			if winner == 1:
-				self.x = random.randint(self.gs.width/8,(3*self.gs.width/8))
+				#self.x = random.randint(self.gs.width/8,(3*self.gs.width/8))
+				self.x = self.gs.width/4
 			else: #if player 2 wins point
 				self.x = random.randint((5*self.gs.width/8),(7*self.gs.width/8))
 			#self.y = self.gs.height/2
@@ -166,55 +138,48 @@ class Ball(pygame.sprite.Sprite):
 
 		def bounce(self,player):
 
-
 			rf = random.randint(-1,1)
 			rs = random.random()
 			#bounce from player 1
 			if player == 1:
 				xDiff = self.gs.p1.bx-self.rect.centerx
-				yDiff = self.gs.p1.by-self.rect.centery+(xDiff/self.rect.centery)
-				ang = math.atan2(yDiff,xDiff)
+				yDiff = self.gs.p1.by-self.rect.centery#+((xDiff/self.rect.centery) - 5)
+				ang = abs(math.atan2(yDiff,xDiff))
 
-				""" not exactly sure what to do here """
 				self.vx = math.cos(ang) * -12.5  #self.gs.p1.vx
-				self.vx += math.cos(ang)*self.gs.p1.vx
+				self.vx += math.sin(ang)*(1.25*self.gs.p1.vx)
 				self.vx += (int(rf*rs))
 
 				if abs(self.vx) < 1:
 					self.vx+=random.uniform(-1.5,1.5)
 
 				self.vy *= -0.9
-				self.vy -= math.cos(ang)*self.gs.p1.vy
+				self.vy -= math.cos(ang)*(0.5*self.gs.p1.vy)
 				self.rect = self.rect.move(self.vx,self.vy)
 
 			#bounce from player 2
 			elif player == 2:
 
 				xDiff = self.gs.p2.bx-self.rect.centerx
-				yDiff = self.gs.p2.by-self.rect.centery+(xDiff/self.rect.centery)
+				yDiff = self.gs.p2.by-self.rect.centery#+((xDiff/self.rect.centery) - 5)
 				ang = math.atan2(yDiff,xDiff)
 
-				""" not exactly sure what to do here """
 				self.vx = math.cos(ang) * -12.5 #self.gs.p1.vx
-				self.vx += math.cos(ang)*self.gs.p2.vx
+				self.vx += math.sin(ang)*(1.25*self.gs.p2.vx)
 				self.vx += (int(rf*rs))
 
 				if abs(self.vx) < 1:
 					self.vx+=random.uniform(-1.5,1.5)
 
 				self.vy *= -0.9
-				self.vy -= math.cos(ang)*self.gs.p2.vy
+				self.vy -= math.cos(ang)*int(0.5*self.gs.p2.vy)
 				self.rect = self.rect.move(self.vx,self.vy)
-
-				print "PLAYER 2 BOUNCE"
-
 
 			#bounce from net
 			elif player == 3: #
 
 				if (self.rect.centery >= (self.gs.net.rect.top-5) and self.rect.centery <= (self.gs.net.rect.top+5)):
 					self.vy *= int(-0.75)
-					print "TOP NET BOUNCE OMG"
 
 				else:
 					if self.rect.centerx < self.gs.width/2:
@@ -224,8 +189,6 @@ class Ball(pygame.sprite.Sprite):
 
 					self.vx *= -1
 					self.rect = self.rect.move(self.vx,self.vy)
-
-				print "NET BOUNCE"
 
 			#bounce off ceiling:
 			elif player == 4:
@@ -240,28 +203,19 @@ class Ball(pygame.sprite.Sprite):
 
 			# collision detection series
 
-			print "VY = " + str(self.vy)
-			print "VX = " + str(self.vx)
-
 			#if collides with a player
 			if pygame.sprite.collide_rect(self,self.gs.p1):
-				print "bouncing p1!"
 				self.bounce(1)
 			elif pygame.sprite.collide_rect(self,self.gs.p2):
-				print "bouncing p2!"
 				self.bounce(2)
 			elif pygame.sprite.collide_rect(self,self.gs.net):
-				print "bouncing off net!"
 				self.bounce(3)
 			elif (self.rect.top <= 0 and self.vy < -2 and self.gs.ceiling == True):
-				print "bounced off ceiling"
 				self.bounce(4)
 			elif ( (self.rect.left <= 0 or self.rect.right >= self.gs.width) and self.gs.walls == True):
-				print "bounced off wall"
 				self.bounce(5)
 			elif self.gs.challenge == True:
 				if pygame.sprite.collide_rect(self,self.gs.ceiling):
-					print "bounced off new ceiling"
 					self.bounce(4)
 
 			#if hits ground
@@ -269,9 +223,7 @@ class Ball(pygame.sprite.Sprite):
 				self.vy += self.gs.ballG
 				self.rect = self.rect.move(self.vx,self.vy)
 
-			else:
-				print "point awarded"
-
+			else: #point awarded sequence
 				if self.rect.centerx <= self.gs.width/2:
 					self.point(2)
 				else:
@@ -287,8 +239,6 @@ class Ball(pygame.sprite.Sprite):
 			else: #if player is 2
 				self.gs.p2.points += 1
 				self.gs.ball = Ball(gs,2)
-
-
 
 
 class Net(pygame.sprite.Sprite):
@@ -307,9 +257,6 @@ class Net(pygame.sprite.Sprite):
 			self.rect.centerx = self.gs.width/2
 			self.rect.bottom = self.gs.height
 
-			print "net topleft = " + str(self.rect.topleft)
-
-
 class Win(pygame.sprite.Sprite):
 		def __init__(self,gs=None):
 			pygame.sprite.Sprite.__init__(self)
@@ -320,14 +267,10 @@ class Win(pygame.sprite.Sprite):
 				self.win(1)
 			elif self.gs.p2.points >= self.gs.maxPts:
 				self.win(2)
-			else:
-				pass
 
 		def win(self,player):
-				print "Player " + str(player) + " Wins!"
 				self.gs.gameOver = True
 				self.gs.endGame = EndGame(player,self.gs)
-
 
 
 class Menu(pygame.sprite.Sprite):
@@ -418,10 +361,6 @@ class Ceiling(pygame.sprite.Sprite):
 			self.rect = self.image.get_rect()
 			self.rect.centerx = self.gs.width/2
 			self.rect.centery = self.gs.height/4
-
-			print "net topleft = " + str(self.rect.topleft)
-
-
  
 class GameSpace:
 	def main(self):
@@ -445,10 +384,7 @@ class GameSpace:
 		self.gameOver = False
 		self.quit = False
 
-
-
 		self.numPlayers = 1 #default number of players
-
 	
 		#CHANGEABLE OBJECTS
 
@@ -457,13 +393,9 @@ class GameSpace:
 		self.walls = True
 		self.maxPts = 25
 
-
-
 		self.title = "Slime Volleyball"
 
 		self.menu = Menu(self)
-
-
 
 		while self.menu.isMenu == True:
 
@@ -501,17 +433,12 @@ class GameSpace:
 
 			pygame.display.flip()
 
-		
-
-
-
-		
 
 		# set up game objects
 
 		self.p1 = Slime(self,self.numPlayers) #player 1
 		self.numPlayers += 1
-		self.p2 = Slime(self,self.numPlayers,True) #player 2 is human
+		self.p2 = Slime(self,self.numPlayers) #player 2 is human
 		self.numPlayers += 1
 
 		self.ball = Ball(self)
@@ -608,8 +535,6 @@ class GameSpace:
 		self.net = Net(self)
 		self.ceiling = Ceiling(self)
 		self.ball = Ball(self,self.endGame.winner)
-
-
 
 
 if __name__ == '__main__':
