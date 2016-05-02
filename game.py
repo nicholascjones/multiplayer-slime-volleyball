@@ -51,18 +51,30 @@ class Slime(pygame.sprite.Sprite):
 		def tick(self):
 
 			#movement series
-			"""
-			if self.rect.bottom < self.ground:
+			
+			
+			print "BOTTOM LOCATION = " + str(self.rect.bottom)
+			print "GROUND LOCATION = " + str(self.ground)
+			if self.rect.bottom > self.ground:
 				print "uhhh"
 				self.rect.bottom = self.ground
-			"""
 
-			if self.rect.bottom <= self.ground:
+			
+
+			if self.rect.bottom < self.ground:
 				if pygame.sprite.collide_rect(self,self.gs.net):
 					if self.pn == 1:
 						self.vx = -1
 					elif self.pn == 2:
 						self.vx = 1
+					elif self.rect.left <= 0:
+						self.vx = 2
+					elif self.rect.right >= self.gs.width:
+						self.vx = -2
+					elif self.vx >= 1:
+						self.vx -= 1
+					elif self.vx <= -1:
+						self.vx += 1
 				self.vy += self.gs.g
 				self.rect = self.rect.move(self.vx,self.vy)
 				print "not ground tick"
@@ -117,7 +129,9 @@ class Slime(pygame.sprite.Sprite):
 
 		def jump(self):
 
-			if self.rect.bottom >= self.ground:
+			print "TRUTH = " + str(self.rect.bottom <= self.ground)
+
+			if (self.rect.bottom <= self.ground) and (self.rect.bottom > self.ground-5):
 				print "jump on it!"
 				self.vy -= 7
 				self.rect = self.rect.move(0,self.vy)
@@ -246,14 +260,21 @@ class Ball(pygame.sprite.Sprite):
 				print "point awarded"
 
 				if self.rect.centerx <= self.gs.width/2:
-					self.gs.p2.points += 1
-					self.gs.ball = Ball(gs,2)
+					self.point(2)
 				else:
-					self.gs.p1.points += 1
-					self.gs.ball = Ball(gs,1)
+					self.point(1)
+					
 
-				print "PLAYER 1 POINTS = " + str(self.gs.p1.points)
-				print "PLAYER 2 POINTS = " + str(self.gs.p2.points)
+		def point(self,player):
+
+			if player == 1:
+				self.gs.p1.points += 1
+				self.gs.ball = Ball(gs,1)
+
+			else: #if player is 2
+				self.gs.p2.points += 1
+				self.gs.ball = Ball(gs,2)
+
 
 
 
