@@ -435,17 +435,22 @@ class Client(object):
 			# separate the string for data processing
 			components = self.line.split("|")
 			try:
-				x = components[0]
-				y = components[1]
-				bx = components[2]
-				by = components[3]
-				ppoints = components[4]
-				epoints = components[5]
+				px = components[0]
+				py = components[1]
+				ex = components[2]
+				ey = components[3]
+				bx = components[4]
+				by = components[5]
+				ppoints = components[6]
+				epoints = components[7]
 			except:
 				return
+			if self.p != None:
+				self.p.rect.centerx = int(px)
+				self.p.rect.bottom = int(py)
 			if self.e != None:
-				self.e.rect.centerx = int(x)
-				self.e.rect.bottom = int(y)
+				self.e.rect.centerx = int(ex)
+				self.e.rect.bottom = int(ey)
 				self.p.points = ppoints
 				self.e.points = epoints
 			if self.ball != None:
@@ -528,14 +533,8 @@ class Client(object):
 						reactor.stop()
 					elif (event.key == pygame.K_a or event.key == pygame.K_d):
 						self.protocol.transport.write(str(event.key))
-						self.p.move(event.key)
 					elif event.key == pygame.K_SPACE:
 						self.protocol.transport.write(str(event.key))
-						self.p.jump()	
-
-			# only tick oneself
-			if self.p != None:
-				self.p.tick()
 
 			self.screen.fill(self.black)
 			if self.p != None:

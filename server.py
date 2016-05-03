@@ -507,6 +507,9 @@ class GameSpace:
 
 	def tick(self):
 		if self.menu.isMenu == False and self.gameOver == False:
+			if self.ball != None:
+				self.ball.tick()
+				self.win.tick()
 			# make sure there is a client
 			if self.p1 != None:
 				# update player 1
@@ -515,17 +518,15 @@ class GameSpace:
 					# if there's a player 2, update
 					# player 1 info over the network about 
 					# player 2, as well as the ball
-					tracker.player1.transport.write(str(self.p2.rect.centerx)+"|"+str(self.p2.rect.bottom)+"|"+str(self.ball.rect.centerx)+"|"+str(self.ball.rect.centery)+"|"+str(self.p1.points)+"|"+str(self.p2.points))
+					tracker.player1.transport.write(str(self.p1.rect.centerx)+"|"+str(self.p1.rect.bottom)+"|"+str(self.p2.rect.centerx)+"|"+str(self.p2.rect.bottom)+"|"+str(self.ball.rect.centerx)+"|"+str(self.ball.rect.centery)+"|"+str(self.p1.points)+"|"+str(self.p2.points))
 			if self.p2 != None:
 				# update player 2
 				self.p2.tick()
 				# game does not start until two players join,
 				# therefore, start ball movement on player 2
 				# joining lobby
-				self.ball.tick()
-				self.win.tick()
 				# send to player 2 the ball and player 1's info
-				tracker.player2.transport.write(str(self.p1.rect.centerx)+"|"+str(self.p1.rect.bottom)+"|"+str(self.ball.rect.centerx)+"|"+str(self.ball.rect.centery)+"|"+str(self.p1.points)+"|"+str(self.p2.points))
+				tracker.player2.transport.write(str(self.p2.rect.centerx)+"|"+str(self.p2.rect.bottom)+"|"+str(self.p1.rect.centerx)+"|"+str(self.p1.rect.bottom)+"|"+str(self.ball.rect.centerx)+"|"+str(self.ball.rect.centery)+"|"+str(self.p1.points)+"|"+str(self.p2.points))
 		elif self.menu.isMenu == True:
 			self.menu.tick()
 			if self.p2 != None and self.enters == 0:
