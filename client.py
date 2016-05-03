@@ -102,21 +102,22 @@ class Slime(pygame.sprite.Sprite):
 						self.vx += 1
 				self.vy += self.gs.g
 				self.rect = self.rect.move(self.vx,self.vy)
-			elif pygame.sprite.collide_rect(self,self.gs.net):
-				if self.pn == 1:
-					self.vx = -2
-				elif self.pn == 2:
-					self.vx = 2
-			elif self.rect.left <= 0:
-					self.vx = 2
-			elif self.rect.right >= self.gs.width:
-					self.vx = -2
-			elif self.vx >= 1:
-				self.vx -= 1
-			elif self.vx <= -1:
-				self.vx += 1
 			else:
-				pass
+				if pygame.sprite.collide_rect(self,self.gs.net):
+					if self.pn == 1:
+						self.vx = -2
+					elif self.pn == 2:
+						self.vx = 2
+				elif self.rect.left <= 0:
+						self.vx = 2
+				elif self.rect.right >= self.gs.width:
+						self.vx = -2
+				elif self.vx >= 1:
+					self.vx -= 1
+				elif self.vx <= -1:
+					self.vx += 1
+				else:
+					pass
 
 			self.rect = self.rect.move(self.vx,0)
 
