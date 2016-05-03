@@ -160,7 +160,10 @@ class Ball(pygame.sprite.Sprite):
 			else: #if player 2 wins point
 				self.x = random.randint((5*self.gs.width/8),(7*self.gs.width/8))
 			#self.y = self.gs.height/2
-			self.y = 0
+			if self.gs.challenge == False:
+				self.y = 0
+			else:
+				self.y = self.gs.height/4 + 20
 			self.vx = 0
 			self.vy = 0
 			self.rect.center = (self.x,self.y)
@@ -241,6 +244,9 @@ class Ball(pygame.sprite.Sprite):
 				self.bounce(4)
 			elif ( (self.rect.left <= 0 or self.rect.right >= self.gs.width) and self.gs.walls == True):
 				self.bounce(5)
+			elif self.gs.challenge == True:
+				if pygame.sprite.collide_rect(self, self.gs.ceiling):
+					self.bounce(4)
 
 			#if hits ground
 			if self.rect.bottom < self.gs.height-10:
@@ -273,7 +279,10 @@ class Net(pygame.sprite.Sprite):
 			#self.x = 300
 			self.y = self.gs.height-100
 			self.image = pygame.image.load("net.png")
-			self.image = pygame.transform.scale(self.image,(self.NetScale/10,self.NetScale))
+			if self.gs.challenge == False:
+				self.image = pygame.transform.scale(self.image,(self.NetScale/10,self.NetScale))
+			else:
+				self.image = pygame.transform.scale(self.image,(self.NetScale/10,int(1.5*self.NetScale)))
 			self.rect = self.image.get_rect()
 			self.rect.centerx = self.gs.width/2
 			self.rect.bottom = self.gs.height
@@ -370,6 +379,16 @@ class EndGame(pygame.sprite.Sprite):
 			self.gs.p.points = 0
 			self.gs.e.points = 0
 
+class Ceiling(pygame.sprite.Sprite):
+	def __init__(self,gs=None):
+		pygame.sprite.Sprite.__init__(self)
+		self.gs = gs
+		self.CeilScale = 1000
+		self.image = pygame.image.load("ceiling.png")
+		self.image = pygame.transform.scale(self.image,(self.CeilScale,10))
+		self.rect = self.image.get_rect()
+		self.rect.centerx = self.gs.width/2
+		self.rect.centery = self.gs.height/4
 
 class Client(object):
 
@@ -387,6 +406,7 @@ class Client(object):
 		self.e = None
 		self.ball = None
 		self.gameOver = False
+		self.challenge = False
 		self.connected = False
 		self.maxPts = 25
 		self.menu = Menu(self)
@@ -523,6 +543,9 @@ class Client(object):
 				self.screen.blit(self.e.image, self.e.rect)
 				self.screen.blit(self.ball.image, self.ball.rect)
 				self.screen.blit(self.net.image, self.net.rect)
+				if self.challenge == True:
+					self.screen.blit(self.ceiling.image, self.ceiling.rect)
+
 				# red score
 				self.screen.blit(pygame.font.SysFont('mono', 36, bold=True).render(str(self.p.points), True, (252,13,27)), ((self.width/4),20))
 				# green score
@@ -540,9 +563,11 @@ class Client(object):
 					if event.key == pygame.K_q:
 						reactor.stop()
 					elif event.key == pygame.K_RETURN:
+						self.challenge = True
+						self.gameOver = False
+						self.ceiling = Ceiling(self)
+						self.net = Net(self)
 						self.protocol.transport.write(str(event.key))
-				elif event.type == MOUSEBUTTONDOWN:
-					reactor.stop()
 
 			self.screen.fill(self.black)
 			self.screen.blit(self.endGame.image, self.endGame.rect)

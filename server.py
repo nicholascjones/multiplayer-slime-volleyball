@@ -131,7 +131,10 @@ class Ball(pygame.sprite.Sprite):
 			else: #if player 2 wins point
 				self.x = random.randint((5*self.gs.width/8),(7*self.gs.width/8))
 			#self.y = self.gs.height/2
-			self.y = 0
+			if self.gs.challenge == False:
+				self.y = 0
+			else:
+				self.y = self.gs.height/4 + 20
 			self.vx = 0
 			self.vy = 0
 			self.rect.center = (self.x,self.y)
@@ -212,6 +215,9 @@ class Ball(pygame.sprite.Sprite):
 				self.bounce(4)
 			elif ( (self.rect.left <= 0 or self.rect.right >= self.gs.width) and self.gs.walls == True):
 				self.bounce(5)
+			elif self.gs.challenge == True:
+				if pygame.sprite.collide_rect(self, self.gs.ceiling):
+					self.bounce(4)
 
 			#if hits ground
 			if self.rect.bottom < self.gs.height-10:
@@ -244,7 +250,10 @@ class Net(pygame.sprite.Sprite):
 			#self.x = 300
 			self.y = self.gs.height-100
 			self.image = pygame.image.load("net.png")
-			self.image = pygame.transform.scale(self.image,(self.NetScale/10,self.NetScale))
+			if self.gs.challenge == False:
+				self.image = pygame.transform.scale(self.image,(self.NetScale/10,self.NetScale))
+			else:
+				self.image = pygame.transform.scale(self.image,(self.NetScale/10,int(1.5*self.NetScale)))
 			self.rect = self.image.get_rect()
 			self.rect.centerx = self.gs.width/2
 			self.rect.bottom = self.gs.height
@@ -316,29 +325,16 @@ class Menu(pygame.sprite.Sprite):
 			else:
 				self.gs.walls = True
 
-class EndGame(pygame.sprite.Sprite):
-		def __init__(self,winner,gs=None):
-			pygame.sprite.Sprite.__init__(self)
-			self.gs = gs
-			if winner == 1:
-				self.image = pygame.image.load("redslime.png")
-				self.winMsg = "Congratulations, Player 1!"
-				self.loseMsg = "Player 2...better luck next time!"
-			else:
-				self.image = pygame.image.load("greenslime.png")
-				self.winMsg = "Congratulations, Player 2"
-				self.loseMsg = "Player 1...better luck next time!"
-
-			self.win2 = "YOU WIN!"
-
-			self.image = pygame.transform.scale(self.image, (200, 120))
-			self.rect = self.image.get_rect()
-			self.rect.center = (self.gs.width/2, (3*self.gs.height/4)+30)
-			self.rMsg = "To play a CHALLENGE GAME, press ENTER"
-			self.qMsg = "To quit, click or press the 'q' key."
-			self.gameOver = True
-			self.gs.p1.points=0
-			self.gs.p2.points=0
+class Ceiling(pygame.sprite.Sprite):
+	def __init__(self,gs=None):
+		pygame.sprite.Sprite.__init__(self)
+		self.gs = gs
+		self.CeilScale = 1000
+		self.image = pygame.image.load("ceiling.png")
+		self.image = pygame.transform.scale(self.image, (self.CeilScale, 10))
+		self.rect = self.image.get_rect()
+		self.rect.centerx = self.gs.width/2
+		self.rect.centery = self.gs.height/4
 
 class Server(Protocol):
 
@@ -389,11 +385,14 @@ class Server(Protocol):
 		self.gs.p1 = None
 		self.gs.p2 = None
 		self.gs.ball = Ball(self.gs)
+		self.gs.net = Net(self.gs)
 		self.gs.menu.isMenu = True
 		self.gs.enters = 0
 		self.gs.maxPts = 25
 		self.gs.ceiling = True
 		self.gs.walls = True
+		self.gs.gameOver = False
+		self.gs.challenge = False
 		self.players.pop()
 
 	def dataReceived(self, data):
@@ -420,10 +419,20 @@ class Server(Protocol):
 				self.gs.enters += 1
 				if self.gs.enters == 2:
 					self.gs.menu.isMenu = False
+					self.gs.enters = 0
 				return
 		elif self.gs.gameOver == True:
 			if data == str(13):
-				self.gs.gameOver = False
+				self.gs.challenge = True
+				self.gs.ball = Ball(self.gs)
+				self.gs.ceiling = Ceiling(self.gs)
+				self.gs.net = Net(self.gs)
+				self.gs.enters += 1
+				self.gs.p1.points = 0
+				self.gs.p2.points = 0
+				if self.gs.enters == 2:
+					self.gs.gameOver = False
+					self.gs.enters = 0 
 		else:
 			# determine what key the player's pressed
 			if data == str(100):
@@ -473,6 +482,7 @@ class GameSpace:
 		self.gameOver = False
 		self.maxPts = 25
 		self.enters = 0
+		self.challenge = False
 
 		#Physics Objects
 		"""NEED TO UPDATE GRAVITY"""
@@ -525,17 +535,10 @@ class GameSpace:
 			if self.p1.points >= self.maxPts:
 				tracker.player1.transport.write("win1")
 				tracker.player2.transport.write("win1")
-				self.p1.points=0
-				self.p2.points=0
-				self.gameOver = False
 			elif self.p2.points >= self.maxPts:
 				tracker.player1.transport.write("win2")
 				tracker.player2.transport.write("win2")
-				self.p1.points=0
-				self.p2.points=0
-				self.gameOver = False
 				
-
 tracker = Tracker()
 gs = GameSpace()
 
