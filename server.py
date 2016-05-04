@@ -428,6 +428,7 @@ class Server(Protocol):
 		self.players.pop()
 
 	def dataReceived(self, data):
+		# menu mode data
 		if self.gs.menu.isMenu == True:
 			if data == str(99):
 				if self == tracker.player1:
@@ -453,6 +454,7 @@ class Server(Protocol):
 					self.gs.menu.isMenu = False
 					self.gs.enters = 0
 				return
+		# post game data
 		elif self.gs.gameOver == True:
 			if data == str(13):
 				self.gs.challenge = True
@@ -465,6 +467,7 @@ class Server(Protocol):
 				if self.gs.enters == 2:
 					self.gs.gameOver = False
 					self.gs.enters = 0 
+		# during game data
 		else:
 			# determine what key the player's pressed
 			if data == str(100):
@@ -565,7 +568,7 @@ class GameSpace:
 			self.menu.tick()
 			if self.p2 != None and self.enters == 0:
 				tracker.player2.transport.write(str(self.maxPts)+"|"+str(self.ceiling)+"|"+str(self.walls))
-
+		# tell the clients the game ended
 		elif self.gameOver == True:
 			if self.p1.points >= self.maxPts:
 				tracker.player1.transport.write("win1")
