@@ -415,6 +415,7 @@ class Client(object):
 					elif event.key == pygame.K_SPACE:
 						self.protocol.transport.write(str(event.key))
 
+			#in-game displays
 			self.screen.fill(self.black)
 			# update the screen
 			if self.p != None:
@@ -435,6 +436,7 @@ class Client(object):
 
 			pygame.display.flip()
 		# post game menu
+		#inputs at end of game
 		elif self.gameOver == True:
 			for event in pygame.event.get():
 				if event.type == QUIT:
@@ -449,6 +451,7 @@ class Client(object):
 						self.net = Net(self)
 						self.protocol.transport.write(str(event.key))
 			# update the screen
+			#display endgame menu
 			self.screen.fill(self.black)
 			self.screen.blit(self.endGame.image, self.endGame.rect)
 			self.screen.blit(pygame.font.SysFont('mono', 32, bold=True).render(str(self.endGame.winMsg), True, (255,255,255)), ((self.width/8),20))
