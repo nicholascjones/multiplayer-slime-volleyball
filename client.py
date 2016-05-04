@@ -18,6 +18,9 @@ from pygame.locals import *
 SERVER_HOST = "localhost"
 SERVER_PORT = 40025
 
+""" NOTE: MAIN GAME COMMENTS ARE IN SERVER.PY, UNLESS FEATURES DIFFERENTIATE SIGNIFICANTLY (will be noted)"""
+"""particularly, the EndGame class is not included in the server program """
+
 class ClientProtocol(Protocol):
 	# basic Twisted client
 	def __init__(self, recv):
@@ -45,6 +48,7 @@ class ClientFactory(ClientFactory):
 	def buildProtocol(self, addr):
 		return ClientProtocol(self.recv)
 
+#slime class
 class Slime(pygame.sprite.Sprite):
 		def __init__(self, gs=None,pn=1,human=True):
 			pygame.sprite.Sprite.__init__(self)
@@ -55,6 +59,7 @@ class Slime(pygame.sprite.Sprite):
 
 			self.human = True
 
+			#initialized points to zero
 			self.points = 0 #player number of points
 
 			self.SpriteScale = 100 #scale for sprites to multiply by
@@ -63,32 +68,33 @@ class Slime(pygame.sprite.Sprite):
 			
 			## initialization differs by player
 			if self.pn == 1:
-				self.image = pygame.image.load("redslime.png") #sprite image
+				self.image = pygame.image.load("redslime.png") #red sprite image
 				self.image = pygame.transform.scale(self.image,(self.SpriteScale,int(self.SpriteScale*.6)))
 				self.rect = self.image.get_rect()	
-				self.rect.centerx = self.gs.width/4 #player 1 values
+				self.rect.centerx = self.gs.width/4 #location initialized
 				self.rect.bottom = self.ground
 			elif self.pn == 2:
-				self.image = pygame.image.load("greenslime.png") #sprite image
+				self.image = pygame.image.load("greenslime.png") #green sprite image
 				self.image = pygame.transform.scale(self.image,(self.SpriteScale,int(self.SpriteScale*.6)))
 				self.rect = self.image.get_rect()
-				self.rect.centerx = 3*self.gs.width/4 #player 2 values
+				self.rect.centerx = 3*self.gs.width/4 #location initialized
 				self.rect.bottom = self.ground
 
-			self.mv =  8 # """ TEST VALUE #velocity used""" 
+			self.mv =  8 # velocity used 
 			self.vx = 0 #initial x velocity
 			self.vy = 0 #initial y velocity
 
+#ball class
 class Ball(pygame.sprite.Sprite):
 		def __init__(self,gs=None,winner=1):
 			pygame.sprite.Sprite.__init__(self)
 			self.gs = gs
-			self.BallScale = 15
+			self.BallScale = 15 #transformation scale
 			self.image = pygame.image.load("ball.png")
 			self.image = pygame.transform.scale(self.image,(self.BallScale,self.BallScale))
 			self.rect = self.image.get_rect()
 
-			#determines who "serves" based on winner
+			#determines who "serves" based on winner of last point
 			if winner == 1:
 				self.x = random.randint(self.gs.width/8,(3*self.gs.width/8))
 			else: #if player 2 wins point
@@ -100,8 +106,9 @@ class Ball(pygame.sprite.Sprite):
 				self.y = self.gs.height/4 + 20
 			self.vx = 0
 			self.vy = 0
-			self.rect.center = (self.x,self.y)
+			self.rect.center = (self.x,self.y) #initial location set
 
+		#function to award points based on where ball lands
 		def point(self,player):
 
 			if player == 1:
@@ -112,7 +119,7 @@ class Ball(pygame.sprite.Sprite):
 				self.gs.p2.points += 1
 				self.gs.ball = Ball(gs,2)
 
-
+#static net class, main comments in server
 class Net(pygame.sprite.Sprite):
 		def __init__(self,gs=None):
 			pygame.sprite.Sprite.__init__(self)
@@ -129,6 +136,7 @@ class Net(pygame.sprite.Sprite):
 			self.rect.centerx = self.gs.width/2
 			self.rect.bottom = self.gs.height
 
+#win class ticks to determine if game is over, and subsequently decides endgame sequence
 class Win(pygame.sprite.Sprite):
 		def __init__(self,gs=None):
 			pygame.sprite.Sprite.__init__(self)
@@ -142,10 +150,12 @@ class Win(pygame.sprite.Sprite):
 			else:
 				pass
 
+		#winning initializes EndGame based on player
 		def win(self,player):
 				self.gs.gameOver = True
 				self.gs.endGame = EndGame(player, self.gs)
 
+#pre-game menu for changing of settings--commented in server.py
 class Menu(pygame.sprite.Sprite):
 		def __init__(self,gs=None):
 			pygame.sprite.Sprite.__init__(self)
@@ -177,7 +187,7 @@ class Menu(pygame.sprite.Sprite):
 			self.l4 = "This game is being played to " + str(self.gs.maxPts) + " points,"
 
 
-
+			# change number of points game is played to
 		def changePoints(self,code):
 
 			if code == pygame.K_UP:
@@ -185,42 +195,47 @@ class Menu(pygame.sprite.Sprite):
 			elif self.gs.maxPts > 1:
 				self.gs.maxPts -= 1
 
+				#turn ceilings on and off
 		def toggleCeilings(self):
 			if self.gs.ceiling == True:
 				self.gs.ceiling = False
 			else:
 				self.gs.ceiling = True
 
+				#turn walls on and off
 		def toggleWalls(self):
 			if self.gs.walls == True:
 				self.gs.walls = False
 			else:
 				self.gs.walls = True
 
+#EndGame class comes up when a game ends		
 class EndGame(pygame.sprite.Sprite):
 		def __init__(self,winner,gs=None):
 			pygame.sprite.Sprite.__init__(self)
 			self.gs = gs
-			if winner == 1:
+			if winner == 1: #if player 1 wins, display as such
 				self.image = pygame.image.load("redslime.png")
 				self.winMsg = "Congratulations, Player 1!"
 				self.loseMsg = "Player 2...better luck next time!"
-			else:
+			else: #if player 2 wins, display as such
 				self.image = pygame.image.load("greenslime.png")
 				self.winMsg = "Congratulations, Player 2"
 				self.loseMsg = "Player 1...better luck next time!"
 
-			self.win2 = "YOU WIN!"
-			self.image = pygame.transform.scale(self.image,(200,120))
+			self.win2 = "YOU WIN!" #string setting
+			self.image = pygame.transform.scale(self.image,(200,120)) #display winning slime
 			self.rect = self.image.get_rect()
 			self.rect.center = (self.gs.width/2,(3*self.gs.height/4)+30)
 			self.rMsg = "To play a CHALLENGE GAME, press ENTER"
-			self.qMsg = "To quit, click or press the 'q' key."
+			self.qMsg = "To quit, press the 'q' key."
 			self.gameOver = True
 
-			self.gs.p.points = 0
+			self.gs.p.points = 0 #reset points back to zero
 			self.gs.e.points = 0
 
+#static ceiling class for in challenge mode, drops lower than normal ceiling and
+#displays as white
 class Ceiling(pygame.sprite.Sprite):
 	def __init__(self,gs=None):
 		pygame.sprite.Sprite.__init__(self)
@@ -337,12 +352,14 @@ class Client(object):
 			print self.line
 			reactor.stop()
 
+
 	def tick(self):
 		# update the screen info and obtain user input
 		if c.exit == True:
 			reactor.stop()
 		# menu mode
-		if self.menu.isMenu == True:
+		#handling user input in menu 
+		if self.menu.isMenu == True: #set menu flag to be true
 			for event in pygame.event.get():
 				if event.type == QUIT:
 					reactor.stop()
@@ -372,6 +389,7 @@ class Client(object):
 			self.menu.tick()
 			self.screen.fill(self.black)
 			self.screen.blit(self.menu.image, self.menu.rect)
+			## display menu items
 			self.screen.blit(pygame.font.SysFont('mono', 36, bold=True).render(str(self.title), True, (255,255,255)), ((self.width/4),20))
 			self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.menu.l2), True, (150,150,255)), ((self.width/8),70))
 			self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.menu.l3), True, (150,150,255)), ((self.width/8),120))
@@ -381,6 +399,8 @@ class Client(object):
 
 			pygame.display.flip()
 		# gameplay mode
+
+		#if have moved into gameplay mode, take inputs
 		elif self.menu.isMenu == False and self.gameOver == False:
 			for event in pygame.event.get():
 				if event.type == QUIT:
