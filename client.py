@@ -33,6 +33,7 @@ class ClientProtocol(Protocol):
 		print "Connected to server!"
 
 	def connectionLost(self, reason):
+		# close the game
 		c.exit = True
 
 class ClientFactory(ClientFactory):
@@ -398,7 +399,8 @@ class Client(object):
 		self.exit = False
 		pygame.init()
 		pygame.key.set_repeat(1, 50)
-		# game variables
+		# game variables and other variables needed to manage
+		# the game and the client's connection
 		self.size = self.width, self.height = 640, 480
 		self.screen = pygame.display.set_mode(self.size)
 		self.black = 100, 100, 100
@@ -423,15 +425,18 @@ class Client(object):
 	def new_line(self, line):
 		# how each client updates the game from the server
 		self.line = line
+		# did a client win
 		if self.line == "win1":
 			self.win.win(1)
 		elif self.line == "win2":
 			self.win.win(2)
-		# determine what is being sent over the network
+		# intial connection information, such as which player
+		# the client is by running connectionMade
 		if self.connected == False and (self.line == str(1) or self.line == str(2) or self.line == "Server is full!"):
 			self.connected = True
 			self.connectionMade()
 			return
+		# data for when the game has started
 		if self.menu.isMenu == False:
 			# separate the string for data processing
 			components = self.line.split("|")
@@ -446,17 +451,22 @@ class Client(object):
 				epoints = components[7]
 			except:
 				return
+			# update player's info
 			if self.p != None:
 				self.p.rect.centerx = int(px)
 				self.p.rect.bottom = int(py)
+			# update enemy's info
 			if self.e != None:
 				self.e.rect.centerx = int(ex)
 				self.e.rect.bottom = int(ey)
+			# update points
 				self.p.points = ppoints
 				self.e.points = epoints
+			# update ball
 			if self.ball != None:
 				self.ball.rect.centerx = int(bx)
 				self.ball.rect.centery = int(by)
+		# data for menu mode
 		else:
 			components = self.line.split("|")
 			pts = components[0]
@@ -491,6 +501,7 @@ class Client(object):
 		# update the screen info and obtain user input
 		if c.exit == True:
 			reactor.stop()
+		# menu mode
 		if self.menu.isMenu == True:
 			for event in pygame.event.get():
 				if event.type == QUIT:
@@ -498,22 +509,26 @@ class Client(object):
 				elif event.type == KEYDOWN:
 					if event.key == pygame.K_q:
 						reactor.stop()
+					# change point totals
 					elif (event.key == pygame.K_UP or event.key == pygame.K_DOWN):
 						if self.value == 1:
 							self.menu.changePoints(event.key)
 							self.protocol.transport.write(str(event.key))
+					# toggle ceilings
 					elif event.key == pygame.K_c:
 						if self.value == 1:
 							self.menu.toggleCeilings()
 							self.protocol.transport.write(str(event.key))
+					# toggle walls
 					elif event.key == pygame.K_w:
 						if self.value == 1:
 							self.menu.toggleWalls()
 							self.protocol.transport.write(str(event.key))
+					# start the game
 					elif event.key == pygame.K_RETURN:
 						self.menu.isMenu = False
 						self.protocol.transport.write(str(event.key))
-
+			# fill the screen
 			self.menu.tick()
 			self.screen.fill(self.black)
 			self.screen.blit(self.menu.image, self.menu.rect)
@@ -525,6 +540,7 @@ class Client(object):
 			self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.menu.l5), True, (150,150,255)), ((self.width/8),270))
 
 			pygame.display.flip()
+		# gameplay mode
 		elif self.menu.isMenu == False and self.gameOver == False:
 			for event in pygame.event.get():
 				if event.type == QUIT:
@@ -532,12 +548,15 @@ class Client(object):
 				elif event.type == KEYDOWN:
 					if event.key == pygame.K_q:
 						reactor.stop()
+					# movement keys
 					elif (event.key == pygame.K_a or event.key == pygame.K_d):
 						self.protocol.transport.write(str(event.key))
+					# jumping
 					elif event.key == pygame.K_SPACE:
 						self.protocol.transport.write(str(event.key))
 
 			self.screen.fill(self.black)
+			# update the screen
 			if self.p != None:
 				self.screen.blit(self.p.image, self.p.rect)
 				self.screen.blit(self.e.image, self.e.rect)
@@ -555,6 +574,7 @@ class Client(object):
 				self.screen.blit(pygame.font.SysFont('mono', 24, bold=True).render(str(self.title), True, (255,255,255)), ((5*self.width/16)+15,20))
 
 			pygame.display.flip()
+		# post game menu
 		elif self.gameOver == True:
 			for event in pygame.event.get():
 				if event.type == QUIT:
@@ -568,7 +588,7 @@ class Client(object):
 						self.ceiling = Ceiling(self)
 						self.net = Net(self)
 						self.protocol.transport.write(str(event.key))
-
+			# update the screen
 			self.screen.fill(self.black)
 			self.screen.blit(self.endGame.image, self.endGame.rect)
 			self.screen.blit(pygame.font.SysFont('mono', 32, bold=True).render(str(self.endGame.winMsg), True, (255,255,255)), ((self.width/8),20))
