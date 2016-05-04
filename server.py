@@ -3,18 +3,21 @@
 ## Twisted/PyGame Project - CSE 30332
 ## Prof. Collin McMillan
 
+
+#importing of twisted networking libraries
 from twisted.internet.protocol import Factory
 from twisted.internet.protocol import Protocol
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 
 import sys
-import math
+import math #used for calculations
 import os
-import pygame
-import random
+import pygame 
+import random #used for randomization in gameplay
 from pygame.locals import *
 
+#twisted port details
 SERVER_HOST = "localhost"
 SERVER_PORT = 40025
 
@@ -26,189 +29,199 @@ class Slime(pygame.sprite.Sprite):
 			self.gs = gs
 			self.pn = pn #player number
 
-			self.human = True
+			self.human = True #flag for later implementation of a single player mode
 
 			self.points = 0 #player number of points
 
 			self.SpriteScale = 100 #scale for sprites to multiply by
 			
-			self.ground = self.gs.height
+			self.ground = self.gs.height #used as quick local variable to calculate boundaries
 			
 			## initialization differs by player
-			if self.pn == 1:
+			if self.pn == 1: #if player 1
 				self.image = pygame.image.load("redslime.png") #sprite image
 				self.image = pygame.transform.scale(self.image,(self.SpriteScale,int(self.SpriteScale*.6)))
 				self.rect = self.image.get_rect()	
-				self.rect.centerx = self.gs.width/4 #player 1 values
+				self.rect.centerx = self.gs.width/4 #initialization location
 				self.rect.bottom = self.ground
-			elif self.pn == 2:
+			elif self.pn == 2: #if player 2
 				self.image = pygame.image.load("greenslime.png") #sprite image
 				self.image = pygame.transform.scale(self.image,(self.SpriteScale,int(self.SpriteScale*.6)))
 				self.rect = self.image.get_rect()
-				self.rect.centerx = 3*self.gs.width/4 #player 2 values
+				self.rect.centerx = 3*self.gs.width/4 #initialization location
 				self.rect.bottom = self.ground
 
-			self.mv =  8 # """ TEST VALUE #velocity used""" 
+			self.mv =  8 # constant velocity change (acceleration) added when player is moved
 			self.vx = 0 #initial x velocity
 			self.vy = 0 #initial y velocity
 
+		#tick function for slime players
 		def tick(self):
 
 			#movement series
-			if self.rect.bottom > self.ground:
+			if self.rect.bottom > self.ground: #if player is below ground level, bring them up to ground level
 				self.rect.bottom = self.ground
 
-			if self.rect.bottom < self.ground:
-				if pygame.sprite.collide_rect(self,self.gs.net):
-					if self.pn == 1:
+			if self.rect.bottom < self.ground: #if player is above ground (in the air)
+				if pygame.sprite.collide_rect(self,self.gs.net): #if colliding with net
+					if self.pn == 1: #move left if player 1, move right if player 2
 						self.vx = -1
 					elif self.pn == 2:
 						self.vx = 1
-				elif self.rect.left <= 0:
-					self.vx = 2
-				elif self.rect.right >= self.gs.width:
-					self.vx = -2
-				elif self.vx >= 1:
-					self.vx -= 1
-				elif self.vx <= -1:
-					self.vx += 1
-				self.vy += self.gs.g
-				self.rect = self.rect.move(self.vx,self.vy)
+				elif self.rect.left <= 0: #if left boundary
+					self.vx = 2 #move right quickly
+				elif self.rect.right >= self.gs.width: #if right boundary
+					self.vx = -2 #move left quickly
+				elif self.vx >= 1: #if has velocity rightwards
+					self.vx -= 1 #decrease it
+				elif self.vx <= -1: #if velocity leftwards
+					self.vx += 1 #decrease it
+				self.vy += self.gs.g #apply gravity!
+				self.rect = self.rect.move(self.vx,self.vy) #apply movement changes
 
-			else:
-				if pygame.sprite.collide_rect(self,self.gs.net):
-					if self.pn == 1:
+			else: #if player is on ground (no gravity applied)
+				if pygame.sprite.collide_rect(self,self.gs.net): #if colliding with net
+					if self.pn == 1: #move left if player 1, move right if player 2
 						self.vx = -2
 					elif self.pn == 2:
 						self.vx = 2
-				elif self.rect.left <= 0:
-						self.vx = 2
-				elif self.rect.right >= self.gs.width:
-						self.vx = -2
-				elif self.vx >= 1:
-					self.vx -= 1
-				elif self.vx <= -1:
-					self.vx += 1
+				elif self.rect.left <= 0: #if left boundary
+						self.vx = 2 #move right quickly
+				elif self.rect.right >= self.gs.width: #if right boundary
+						self.vx = -2 #move left quickly
+				elif self.vx >= 1: #if velocity rightwards
+					self.vx -= 1 #decrease it
+				elif self.vx <= -1: #if velocity leftwards
+					self.vx += 1 #decrease it
 				else:
 					pass
 
-			self.rect = self.rect.move(self.vx,0)
+			self.rect = self.rect.move(self.vx,0) #only apply movement changes along x axis
 
 
-			self.by = self.rect.bottom
+			#set member tracking varialbes
+			self.by = self.rect.bottom 
 			self.bx = self.rect.centerx
 
 		def move(self,code):
 
-
+			# if not computer (always set to human currently)
 			if self.human == True:
 
+				#add velocity based on key input
 				if code == K_d:
 				#	self.rect = self.rect.move(self.mv,0)
 					self.vx += self.mv/2
 				elif code == K_a:
 				#	self.rect = self.rect.move(-self.mv,0)
 					self.vx -= self.mv/2
-			else:
+			else: #if computer (mode not implemented)
 				self.vx = self.gs.ball.vx
 
+
+		#jumping function for slime
 		def jump(self):
 
+			#if on/around ground
 			if (self.rect.bottom <= self.ground) and (self.rect.bottom > self.ground-5):
-				self.vy -= 7
-				self.rect = self.rect.move(0,self.vy)
+				self.vy -= 7 #accelerate upwards
+				self.rect = self.rect.move(0,self.vy) #apply jumping
 
+#ball class initialization
 class Ball(pygame.sprite.Sprite):
 		def __init__(self,gs=None,winner=1):
 			pygame.sprite.Sprite.__init__(self)
 			self.gs = gs
-			self.BallScale = 15
+			self.BallScale = 15 #scaling of image
 			self.image = pygame.image.load("ball.png")
 			self.image = pygame.transform.scale(self.image,(self.BallScale,self.BallScale))
 			self.rect = self.image.get_rect()
 
 			#determines who "serves" based on winner
 			if winner == 1:
-				self.x = random.randint(self.gs.width/8,(3*self.gs.width/8))
+				self.x = random.randint(self.gs.width/8,(3*self.gs.width/8)) #serve location set to random within boundaries
 			else: #if player 2 wins point
 				self.x = random.randint((5*self.gs.width/8),(7*self.gs.width/8))
 			#self.y = self.gs.height/2
-			if self.gs.challenge == False:
-				self.y = 0
+			if self.gs.challenge == False: #if not challenge mode
+				self.y = 0 #dropped from top
 			else:
-				self.y = self.gs.height/4 + 20
+				self.y = self.gs.height/4 + 20 #if challenge mode, dropped from lower point
 			self.vx = 0
 			self.vy = 0
 			self.rect.center = (self.x,self.y)
 
-		def bounce(self,player):
 
+		def bounce(self,player): #bounce function test
 
+			#random factor choices for physics engine
 			rf = random.randint(-1,1)
 			rs = random.random()
+
 			#bounce from player 1
 			if player == 1:
 				xDiff = self.gs.p1.bx-self.rect.centerx
-				yDiff = self.gs.p1.by-self.rect.centery#+(xDiff/self.rect.centery)
-				ang = math.atan2(yDiff,xDiff)
+				yDiff = self.gs.p1.by-self.rect.centery
+				ang = math.atan2(yDiff,xDiff) #calculate angle based on player hit angle
 
-				""" not exactly sure what to do here """
-				self.vx = math.cos(ang) * -12.5  #self.gs.p1.vx
-				self.vx += math.cos(ang)*self.gs.p1.vx
-				self.vx += (int(rf*rs))
+				
+				self.vx = math.cos(ang) * -12.5 #x velocity multiplier
+				self.vx += math.cos(ang)*self.gs.p1.vx #add portions of player x velocity
+				self.vx += (int(rf*rs)) #slight randomness change
 
-				if abs(self.vx) < 1:
+				if abs(self.vx) < 1: #if minimal velocity, add randomness to prevent stalemate of ball
 					self.vx+=random.uniform(-1.5,1.5)
 
-				self.vy *= -0.9
-				self.vy -= math.cos(ang)*self.gs.p1.vy
+				self.vy *= -0.9 #decrease y momentum, but sent upwards
+				self.vy -= math.cos(ang)*self.gs.p1.vy #add y momentum based on angle
 				self.rect = self.rect.move(self.vx,self.vy)
 
 			#bounce from player 2
 			elif player == 2:
 
 				xDiff = self.gs.p2.bx-self.rect.centerx
-				yDiff = self.gs.p2.by-self.rect.centery#+(xDiff/self.rect.centery)
-				ang = math.atan2(yDiff,xDiff)
+				yDiff = self.gs.p2.by-self.rect.centery
+				ang = math.atan2(yDiff,xDiff) #calculate angle based on player hit angle
 
-				""" not exactly sure what to do here """
-				self.vx = math.cos(ang) * -12.5 #self.gs.p1.vx
-				self.vx += math.cos(ang)*self.gs.p2.vx
-				self.vx += (int(rf*rs))
+				self.vx = math.cos(ang) * -12.5 #x velocity multiplier
+				self.vx += math.cos(ang)*self.gs.p2.vx #add portions of player x velocity
+				self.vx += (int(rf*rs)) #slight randomness change
 
-				if abs(self.vx) < 1:
+				if abs(self.vx) < 1: #if minimal velocity, add randomness to prevent stalemate of ball
 					self.vx+=random.uniform(-1.5,1.5)
 
-				self.vy *= -0.9
-				self.vy -= math.cos(ang)*self.gs.p2.vy
+				self.vy *= -0.9 #decrease y momentum, but sent upwards
+				self.vy -= math.cos(ang)*self.gs.p2.vy #add y momentum based on angle
 				self.rect = self.rect.move(self.vx,self.vy)
 
 			#bounce from net
-			elif player == 3: #
+			elif player == 3:
 
-				if (self.rect.centery >= (self.gs.net.rect.top-5) and self.rect.centery <= (self.gs.net.rect.top+5)):
-					self.vy *= int(-0.75)
-				else:
+				if (self.rect.centery >= (self.gs.net.rect.top-5) and self.rect.centery <= (self.gs.net.rect.top+5)): #if top of net
+					self.vy *= int(-0.75) #loses y momentum when hits top of net
+				else: #if hits net side, bounces quickly backwards
 					if self.rect.centerx < self.gs.width/2:
 						self.rect = self.rect.move(-2,0)
 					else:
 						self.rect = self.rect.move(2,0)
 
 			#bounce off ceiling:
-			elif player == 4:
+			elif player == 4: #no added force
 				self.vy *= -1
 				self.rect = self.rect.move(self.vx,self.vy)
 
-			elif player == 5:
+			#bounces off walls
+			elif player == 5: #no added force
 				self.vx *= -1
 				self.rect = self.rect.move(self.vx,self.vy)
 
+
+		#ball tick function
 		def tick(self):
 
 			# collision detection series
-			#if collides with a player
+			#chooses bounce function arguments based on who collision is with
 			if pygame.sprite.collide_rect(self,self.gs.p1):
-
 				self.bounce(1)
 			elif pygame.sprite.collide_rect(self,self.gs.p2):
 				self.bounce(2)
@@ -218,23 +231,26 @@ class Ball(pygame.sprite.Sprite):
 				self.bounce(4)
 			elif ( (self.rect.left <= 0 or self.rect.right >= self.gs.width) and self.gs.walls == True):
 				self.bounce(5)
-			elif self.gs.challenge == True:
+			elif self.gs.challenge == True: #if hits challenge ceiling
 				if pygame.sprite.collide_rect(self, self.gs.ceiling):
 					self.bounce(4)
 
-			#if hits ground
-			if self.rect.bottom < self.gs.height-10:
-				self.vy += self.gs.ballG
+			#testing y value
+			if self.rect.bottom < self.gs.height-10: #if does not hit ground
+				self.vy += self.gs.ballG #ball gravity
 				self.rect = self.rect.move(self.vx,self.vy)
 
-			else:
+			else: #if hits ground, determine to whom to award the point
 				if self.rect.centerx <= self.gs.width/2:
 					self.point(2)
 				else:
 					self.point(1)
 					
 
+		#ball has function to "allocate" points
 		def point(self,player):
+
+			#function adds a point to winning player and then initializes a new ball to be served on that side
 
 			if player == 1:
 				self.gs.p1.points += 1
@@ -245,27 +261,30 @@ class Ball(pygame.sprite.Sprite):
 				self.gs.ball = Ball(gs,2)
 
 
+#static net class initialization
 class Net(pygame.sprite.Sprite):
 		def __init__(self,gs=None):
 			pygame.sprite.Sprite.__init__(self)
 			self.gs = gs
-			self.NetScale = 100
-			#self.x = 300
+			self.NetScale = 100 #transform scaling location
 			self.y = self.gs.height-100
 			self.image = pygame.image.load("net.png")
-			if self.gs.challenge == False:
+			if self.gs.challenge == False: #if not challenge mode, regular size
 				self.image = pygame.transform.scale(self.image,(self.NetScale/10,self.NetScale))
-			else:
+			else: #challenge mode causes net height to increase 
 				self.image = pygame.transform.scale(self.image,(self.NetScale/10,int(1.5*self.NetScale)))
 			self.rect = self.image.get_rect()
 			self.rect.centerx = self.gs.width/2
 			self.rect.bottom = self.gs.height
 
+#win class checks if game is over and initializes endgame in client
 class Win(pygame.sprite.Sprite):
 		def __init__(self,gs=None):
 			pygame.sprite.Sprite.__init__(self)
 			self.gs = gs
+			#no real member variables to initialize
 
+		#tick checks for winner and calls win function for either player
 		def tick(self):
 			if self.gs.p1.points >= self.gs.maxPts:
 				self.win(1)
@@ -274,41 +293,48 @@ class Win(pygame.sprite.Sprite):
 			else:
 				pass
 
+		#win function sets gameOver to be true, initializes endgame
 		def win(self,player):
 			self.gs.gameOver = True
 
+#menu class starts menu before game
 class Menu(pygame.sprite.Sprite):
 		def __init__(self,gs=None):
 			pygame.sprite.Sprite.__init__(self)
 			self.gs = gs
-			self.image = pygame.image.load("redslime.png")
+			self.image = pygame.image.load("redslime.png") #uses red slime image for display
 			self.image = pygame.transform.scale(self.image,(200,120))
 			self.rect = self.image.get_rect()
 			self.rect.center = (self.gs.width/2,(3*self.gs.height/4)+30)
-			self.isMenu = True
+			self.isMenu = True #self flag variable
 
+			#initialization of menu strings
 			self.l2 = "Ceilings are ON. Press 'c' to toggle." 
 			self.l3 = "Walls are ON. Press 'w' to toggle."
 			self.l4 = "This game is being played to " + str(self.gs.maxPts) + " points,"
 			self.l6 = "press the up or down arrows to change."
 			self.l5 = "Press ENTER to start!"
 
+		#tick reacts to user inputs to change menu strings
 		def tick(self):
 
+			#changing displayed ceiling settings
 			if self.gs.ceiling == True:
 				self.l2 = "Ceilings are ON. Press 'c' to toggle." 
 			else:
 				self.l2 = "Ceilings are OFF. Press 'c' to toggle." 
 
+			#changing displayed wall settings
 			if self.gs.walls == True:
 				self.l3 = "Walls are ON. Press 'w' to toggle."
 			else:
 				self.l3 = "Walls are OFF. Press 'w' to toggle."
 
+			#changing displayed point settings
 			self.l4 = "This game is being played to " + str(self.gs.maxPts) + " points,"
 
 
-
+		#modifies 
 		def changePoints(self,code):
 
 			if code == pygame.K_UP:
