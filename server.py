@@ -166,7 +166,7 @@ class Ball(pygame.sprite.Sprite):
 
 				
 				self.vx = math.cos(ang) * -12.5 #x velocity multiplier
-				self.vx += math.cos(ang)*(1.25*self.gs.p1.vx) #add portions of player x velocity
+				self.vx += math.sin(ang)*(1.25*self.gs.p1.vx) #add portions of player x velocity
 				self.vx += (int(rf*rs)) #slight randomness change
 
 				if abs(self.vx) < 1: #if minimal velocity, add randomness to prevent stalemate of ball
@@ -184,7 +184,7 @@ class Ball(pygame.sprite.Sprite):
 				ang = math.atan2(yDiff,xDiff) #calculate angle based on player hit angle
 
 				self.vx = math.cos(ang) * -12.5 #x velocity multiplier
-				self.vx += math.cos(ang)*(1.25*self.gs.p2.vx) #add portions of player x velocity
+				self.vx += math.sin(ang)*(1.25*self.gs.p2.vx) #add portions of player x velocity
 				self.vx += (int(rf*rs)) #slight randomness change
 
 				if abs(self.vx) < 1: #if minimal velocity, add randomness to prevent stalemate of ball
