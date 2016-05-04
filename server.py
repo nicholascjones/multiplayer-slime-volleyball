@@ -334,7 +334,7 @@ class Menu(pygame.sprite.Sprite):
 			self.l4 = "This game is being played to " + str(self.gs.maxPts) + " points,"
 
 
-		#modifies 
+		#modifies points game is played to
 		def changePoints(self,code):
 
 			if code == pygame.K_UP:
@@ -342,27 +342,30 @@ class Menu(pygame.sprite.Sprite):
 			elif self.gs.maxPts > 1:
 				self.gs.maxPts -= 1
 
+		#turns ceilings on and off
 		def toggleCeilings(self):
 			if self.gs.ceiling == True:
 				self.gs.ceiling = False
 			else:
 				self.gs.ceiling = True
 
+				#turns walls on and off
 		def toggleWalls(self):
 			if self.gs.walls == True:
 				self.gs.walls = False
 			else:
 				self.gs.walls = True
 
+#static ceiling class initialized in challenge mode
 class Ceiling(pygame.sprite.Sprite):
 	def __init__(self,gs=None):
 		pygame.sprite.Sprite.__init__(self)
 		self.gs = gs
-		self.CeilScale = 1000
+		self.CeilScale = 1000 #set to be very wide to cover all width changes
 		self.image = pygame.image.load("ceiling.png")
 		self.image = pygame.transform.scale(self.image, (self.CeilScale, 10))
 		self.rect = self.image.get_rect()
-		self.rect.centerx = self.gs.width/2
+		self.rect.centerx = self.gs.width/2 #location initialization
 		self.rect.centery = self.gs.height/4
 
 class Server(Protocol):
@@ -499,26 +502,27 @@ class Tracker:
 		self.player1 = Server
 		self.player2 = Server
 
+#gamespace class, encapsulates everything else
 class GameSpace:
 
+	#initialization function
 	def __init__(self):
 		# initialization
 
 		# General Game Variables
 		self.size = self.width, self.height = 640, 480
 
-		# game over flag
+		# Default flags set to start
 		self.gameOver = False
 		self.maxPts = 25
 		self.enters = 0
 		self.challenge = False
 
-		#Physics Objects
-		"""NEED TO UPDATE GRAVITY"""
-		self.g = 0.5
-		self.ballG = 0.35
+		#Physics settings
+		self.g = 0.5 #slime gravity
+		self.ballG = 0.35 #ball gravity
 
-		# set up game objects
+		# initialize game objects
 		self.p1 = None
 		self.p2 = None
 		self.ball = Ball(self)
@@ -534,6 +538,7 @@ class GameSpace:
 		else:
 			self.p2 = Slime(self, 2)
 
+	#gamespace ticking
 	def tick(self):
 		if self.menu.isMenu == False and self.gameOver == False:
 			if self.ball != None:
