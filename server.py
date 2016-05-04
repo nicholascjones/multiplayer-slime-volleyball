@@ -166,14 +166,14 @@ class Ball(pygame.sprite.Sprite):
 
 				
 				self.vx = math.cos(ang) * -12.5 #x velocity multiplier
-				self.vx += math.cos(ang)*self.gs.p1.vx #add portions of player x velocity
+				self.vx += math.cos(ang)*(1.25*self.gs.p1.vx) #add portions of player x velocity
 				self.vx += (int(rf*rs)) #slight randomness change
 
 				if abs(self.vx) < 1: #if minimal velocity, add randomness to prevent stalemate of ball
 					self.vx+=random.uniform(-1.5,1.5)
 
 				self.vy *= -0.9 #decrease y momentum, but sent upwards
-				self.vy -= math.cos(ang)*self.gs.p1.vy #add y momentum based on angle
+				self.vy -= math.cos(ang)*(0.5*self.gs.p1.vy) #add y momentum based on angle
 				self.rect = self.rect.move(self.vx,self.vy)
 
 			#bounce from player 2
@@ -184,14 +184,14 @@ class Ball(pygame.sprite.Sprite):
 				ang = math.atan2(yDiff,xDiff) #calculate angle based on player hit angle
 
 				self.vx = math.cos(ang) * -12.5 #x velocity multiplier
-				self.vx += math.cos(ang)*self.gs.p2.vx #add portions of player x velocity
+				self.vx += math.cos(ang)*(1.25*self.gs.p2.vx) #add portions of player x velocity
 				self.vx += (int(rf*rs)) #slight randomness change
 
 				if abs(self.vx) < 1: #if minimal velocity, add randomness to prevent stalemate of ball
 					self.vx+=random.uniform(-1.5,1.5)
 
 				self.vy *= -0.9 #decrease y momentum, but sent upwards
-				self.vy -= math.cos(ang)*self.gs.p2.vy #add y momentum based on angle
+				self.vy -= math.cos(ang)*(0.5*self.gs.p2.vy) #add y momentum based on angle
 				self.rect = self.rect.move(self.vx,self.vy)
 
 			#bounce from net
@@ -204,6 +204,9 @@ class Ball(pygame.sprite.Sprite):
 						self.rect = self.rect.move(-2,0)
 					else:
 						self.rect = self.rect.move(2,0)
+
+					self.vx *= -1
+					self.rect = self.rect.move(self.vx,self.vy)
 
 			#bounce off ceiling:
 			elif player == 4: #no added force
