@@ -1,3 +1,6 @@
+Slime Volleyball by Nick Jones and Brian Mann
+https://github.com/nicholascjones/multiplayer-slime-volleyball
+
 A multiplayer implementation of the popular online game Slime Volleyball, using the PyGame and Twisted libraries. The title indicates what type of game our project is: a goofy volleyball simulator with slimes instead of people. The concept mimics actual volleyball, with each player attempting to score a set number of points by hitting the ball into their opponent's ground, while preventing the ball from hitting the ground on their own side. The files included in this directory are:
 
 	- ball.png
@@ -11,6 +14,8 @@ A multiplayer implementation of the popular online game Slime Volleyball, using 
 	- server.py
 
 The game can be played one of two ways. To play a local game against a static opponent to better your skills, enter python game.py and use the arrow keys to control your red slime, with right arrow to move right, left arrow to move left, and up arrow to move up. Or, put your skills to the test, and play online mode! Run python server.py first, followed by two versions of python client.py. Online mode controls utilize 'a' for left, 'd' for right, and 'space' for jump. Simply follow any additional commands that are displayed on the screen, and have fun!
+
+In online mode, the game functions similarly to the local version available in game.py; however, all of the necessary game information is storedinside of the server, with the clients only displaying what the server sends to them. This means that with every tick, the server sends to both clients the information on each player and the ball, allowing the clients to simply update graphics instead of perform calculations, such as on collision detection and what game state the game should be in, such as entry menu, gameplay, or postgame. Again, online mode can be accessed by opening three separate terminals, and running python server.py, python client.py, python client.py in that order. The server, based on which client connects first, then assigns player values to the clients and blocks any new clients from connecting. Should either client disconnect, the sever then kicks both clients off of the server, resets the gamestate, and awaits the next set of connections. 
 
 As for other features of the game, the physics and mechanics of our game are somewhat realistic, but slightly modified from reality to increase the quality of gameplay. Players can move sideways in the air mid-jump, and the walls and sides of the net add "bounce" to the ball, both of which are fun game changes. For all of the volleyball and tennis purists playing the game, however, grazing the ball off the top of the net will provide the perfect drop shot that you desire!
 
